@@ -1,0 +1,3 @@
+[submodule "ClassificationAlgorithm/VideoClassification"]
+	path = ClassificationAlgorithm/VideoClassification
+	url = http://vps.ckboss.science:3000/CKboss/VideoClassification.git
