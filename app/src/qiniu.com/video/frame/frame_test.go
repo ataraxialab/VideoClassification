@@ -13,8 +13,7 @@ func TestCodec(t *testing.T) {
 		ImagePath: "a/b/c",
 	}
 
-	df := Frame{}
-	df.Decode(f.Encode())
+	df := Decoder().Decode(Encoder().Encode(f)).(Frame)
 
 	assert.Equal(t, f.Index, df.Index)
 	assert.Equal(t, f.Label, df.Label)

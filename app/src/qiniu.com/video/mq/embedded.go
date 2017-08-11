@@ -34,7 +34,9 @@ func (mq *EmbeddedMQ) Close() error {
 }
 
 // Put messages
-func (mq *EmbeddedMQ) Put(topic string, val ...Message) error {
+func (mq *EmbeddedMQ) Put(topic string,
+	encoder Encoder,
+	val ...interface{}) error {
 	db := mq.db
 	err := db.Batch(func(tx *bolt.Tx) error {
 		bucket, err := tx.CreateBucketIfNotExists([]byte(topic))
@@ -55,9 +57,9 @@ func (mq *EmbeddedMQ) Put(topic string, val ...Message) error {
 				ID:        mq.messageID(id),
 				Status:    StatusPending,
 				CreatedAt: uint64(createdAt),
-				Body:      v.Encode(),
+				Body:      v,
 			}
-			err = bucket.Put(mq.messageID(id), m.Encode())
+			err = bucket.Put(mq.messageID(id), m.Encode(encoder))
 			if err != nil {
 				return err
 			}
@@ -69,7 +71,9 @@ func (mq *EmbeddedMQ) Put(topic string, val ...Message) error {
 }
 
 // Get messages
-func (mq *EmbeddedMQ) Get(topic string, from, count uint) ([]MessageEx, error) {
+func (mq *EmbeddedMQ) Get(topic string, from, count uint, decoder Decoder) (
+	[]MessageEx, error) {
+
 	db := mq.db
 	var vals []MessageEx
 
@@ -87,7 +91,7 @@ func (mq *EmbeddedMQ) Get(topic string, from, count uint) ([]MessageEx, error) {
 		for k, v := c.Seek(k); k != nil && min < max; k, v = c.Next() {
 			min++
 			m := MessageEx{}
-			m.Decode(v)
+			m.Decode(v, decoder)
 			vals = append(vals, m)
 		}
 

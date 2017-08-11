@@ -3,6 +3,8 @@ package frame
 import (
 	"encoding/binary"
 	"math"
+
+	"qiniu.com/video/mq"
 )
 
 var endian = binary.BigEndian
@@ -14,8 +16,11 @@ type Frame struct {
 	ImagePath string
 }
 
+type frameCodec struct{}
+
 // Encode the frame to byte slice
-func (f *Frame) Encode() []byte {
+func (c frameCodec) Encode(frame interface{}) []byte {
+	f := frame.(Frame)
 	imagePathLen := len(f.ImagePath)
 	bytes := make([]byte, 4+4+2+imagePathLen)
 	endian.PutUint32(bytes, f.Index)
@@ -27,9 +32,24 @@ func (f *Frame) Encode() []byte {
 }
 
 // Decode fill the object from the raw bytes
-func (f *Frame) Decode(bytes []byte) {
+func (c frameCodec) Decode(bytes []byte) interface{} {
+	f := Frame{}
 	f.Index = endian.Uint32(bytes)
 	f.Label = math.Float32frombits(endian.Uint32(bytes[4:]))
 	imagePathLen := endian.Uint16(bytes[4+4:])
 	f.ImagePath = string(bytes[4+4+2 : 4+4+2+imagePathLen])
+
+	return f
+}
+
+var fc frameCodec
+
+// Decoder return frame decoder
+func Decoder() mq.Decoder {
+	return fc
+}
+
+// Encoder return frame encoder
+func Encoder() mq.Encoder {
+	return fc
 }

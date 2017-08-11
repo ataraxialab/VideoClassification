@@ -6,6 +6,18 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+type ByteCodec []byte
+
+func (bc ByteCodec) Encode(bytes interface{}) []byte {
+	return bytes.([]byte)
+}
+
+func (bc ByteCodec) Decode(bytes []byte) interface{} {
+	return bytes
+}
+
+var codec = ByteCodec{}
+
 func TestMessageEx(t *testing.T) {
 	m := MessageEx{
 		ID:        []byte("id"),
@@ -15,8 +27,7 @@ func TestMessageEx(t *testing.T) {
 	}
 
 	md := MessageEx{}
-
-	md.Decode(m.Encode())
+	md.Decode(m.Encode(codec), codec)
 
 	assert.Equal(t, m.ID, md.ID)
 	assert.Equal(t, m.CreatedAt, md.CreatedAt)
@@ -32,9 +43,9 @@ func TestUpdateStatus(t *testing.T) {
 		Body:      []byte("Body"),
 	}
 
-	bytes := m.Encode()
+	bytes := m.Encode(codec)
 	updateStatus(bytes, StatusPending)
 
-	m.Decode(bytes)
+	m.Decode(bytes, codec)
 	assert.Equal(t, uint16(StatusPending), m.Status)
 }
