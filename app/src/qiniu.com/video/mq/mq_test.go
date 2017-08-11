@@ -10,6 +10,7 @@ func TestBaseMessage(t *testing.T) {
 	m := BaseMessage{
 		id:        "id",
 		createdAt: 9999,
+		status:    StatusDeleted,
 	}
 
 	md := BaseMessage{}
@@ -18,4 +19,5 @@ func TestBaseMessage(t *testing.T) {
 
 	assert.Equal(t, m.id, md.id)
 	assert.Equal(t, m.createdAt, md.createdAt)
+	assert.Equal(t, uint16(StatusDeleted), md.status)
 }

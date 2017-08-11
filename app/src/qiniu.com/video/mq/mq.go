@@ -2,6 +2,15 @@ package mq
 
 import "encoding/binary"
 
+const (
+	// StatusPending waiting to consume
+	StatusPending = iota
+	// StatusConsuming is consuming
+	StatusConsuming
+	// StatusDeleted is deleted
+	StatusDeleted
+)
+
 // MQ provides the persistent operation
 type MQ interface {
 	Open() error
@@ -19,12 +28,15 @@ type Message interface {
 	ID() string
 	SetCreatedAt(uint64)
 	CreatedAt() uint64
+	SetStatus(int)
+	Status()
 }
 
 // BaseMessage message common data
 type BaseMessage struct {
 	id        string
 	createdAt uint64
+	status    uint16
 }
 
 // SetID store the message id
@@ -47,15 +59,26 @@ func (bm *BaseMessage) CreatedAt() uint64 {
 	return bm.createdAt
 }
 
+// SetStatus set message status
+func (bm *BaseMessage) SetStatus(status uint16) {
+	bm.status = status
+}
+
+// Status return message status
+func (bm *BaseMessage) Status() uint16 {
+	return bm.status
+}
+
 var endian = binary.BigEndian
 
 // Encode the base message to bytes
 func (bm *BaseMessage) Encode() []byte {
 	idLen := len(bm.id)
-	bytes := make([]byte, 2+idLen+8)
+	bytes := make([]byte, 2+idLen+8+2)
 	endian.PutUint16(bytes, uint16(idLen))
 	copy(bytes[2:], bm.id)
 	endian.PutUint64(bytes[2+idLen:], bm.createdAt)
+	endian.PutUint16(bytes[2+idLen+8:], bm.status)
 
 	return bytes
 }
@@ -65,4 +88,5 @@ func (bm *BaseMessage) Decode(bytes []byte) {
 	idLen := endian.Uint16(bytes)
 	bm.id = string(bytes[2 : 2+idLen])
 	bm.createdAt = endian.Uint64(bytes[2+idLen:])
+	bm.status = endian.Uint16(bytes[2+idLen+8:])
 }
