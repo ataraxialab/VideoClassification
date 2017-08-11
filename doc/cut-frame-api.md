@@ -149,6 +149,7 @@ Content-Type: application/json
 
 {
   "pattern": "random", // TODO 有哪些模式
+  "from": 0, // 起始位置
   "count": 1 // 1 - 100
 }
 ```
@@ -194,6 +195,7 @@ Content-Type: application/json
 
 {
   "pattern": "random", // TODO 有哪些模式
+  "from": 0, // 起始位置
   "count": 1 // 1 - 100
 }
 ```
