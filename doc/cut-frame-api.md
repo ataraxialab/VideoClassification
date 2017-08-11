@@ -91,7 +91,7 @@ Content-Type: application/json
 
 
 
-### 请求截取光流
+### 请求计算光流
 
 根据截帧模式对视频进行计算光流，并保存结果。
 
