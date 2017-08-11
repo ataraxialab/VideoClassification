@@ -7,20 +7,25 @@ import (
 )
 
 func TestCodec(t *testing.T) {
-	f := Frame{
-		Index:     1,
-		Label:     .123,
-		ImagePath: "a/b/c",
-		Timestamp: 1990,
-		UID:       "id",
+	f := Message{
+		Frame: Frame{
+			Index:     1,
+			Label:     .123,
+			ImagePath: "a/b/c",
+		},
 	}
+	f.SetID("id")
+	f.SetCreatedAt(90900)
 
-	df := Frame{}
+	assert.Equal(t, "id", f.ID())
+	assert.Equal(t, uint64(90900), f.CreatedAt())
+
+	df := Message{}
 	df.Decode(f.Encode())
 
 	assert.Equal(t, f.Index, df.Index)
 	assert.Equal(t, f.Label, df.Label)
 	assert.Equal(t, f.ImagePath, df.ImagePath)
-	assert.Equal(t, f.Timestamp, df.Timestamp)
-	assert.Equal(t, f.UID, df.UID)
+	assert.Equal(t, f.CreatedAt(), df.CreatedAt())
+	assert.Equal(t, f.ID(), df.ID())
 }
