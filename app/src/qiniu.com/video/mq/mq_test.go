@@ -23,3 +23,18 @@ func TestBaseMessage(t *testing.T) {
 	assert.Equal(t, uint16(StatusDeleted), md.status)
 	assert.Equal(t, m.body, md.body)
 }
+
+func TestUpdateStatus(t *testing.T) {
+	m := message{
+		id:        []byte("id"),
+		createdAt: 9999,
+		status:    StatusDeleted,
+		body:      []byte("body"),
+	}
+
+	bytes := m.Encode()
+	updateStatus(bytes, StatusPending)
+
+	m.Decode(bytes)
+	assert.Equal(t, uint16(StatusPending), m.status)
+}

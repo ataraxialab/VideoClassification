@@ -56,3 +56,8 @@ func (m *message) Decode(bytes []byte) {
 	m.id = bytes[2+8+2 : 2+8+2+idLen]
 	m.body = bytes[2+8+2+idLen:]
 }
+
+func updateStatus(rawMessage []byte, status uint16) []byte {
+	endian.PutUint16(rawMessage, status)
+	return rawMessage
+}
