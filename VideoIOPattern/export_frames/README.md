@@ -5,8 +5,8 @@
 #run build.sh to build the bin for Cal Flow and Frame
 #use the export_frames as following:
 
-./export_frames -i Media_URL -o OutputDir -c frame_count -interval check_time_interval -postfix picfmt -log logoutputflag
+./export_frames -i Media_URL -o OutputDir -s WidthxHeight -c frame_count -interval check_time_interval -postfix picfmt -log logoutputflag
 
 Ex:
 
-./export_frames -i test.mp4 -o ./pics -c 21 -interval 10 -postfix jpg -log 1
+./export_frames -i test.mp4 -o ./pics -s 256x256 -c 21 -interval 10 -postfix jpg -log 1
