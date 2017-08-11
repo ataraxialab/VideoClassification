@@ -17,6 +17,7 @@
 
 生成3个随机序列，分别对应classIdx，videoIdx，frameIdx
 
+
 '''
 struct {
 	int clsIdx;
@@ -26,6 +27,7 @@ struct {
 '''
 
 * 2. 解码函数
+
 
 '''
 #define vidClsCnt 400 			//视频类别数目
