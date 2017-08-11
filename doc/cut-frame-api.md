@@ -86,7 +86,12 @@ Content-Type: application/json
 400
 
 // 服务器错误
-500
+5xx
+
+Content-Type: application/json
+{
+  "message": "error message"
+}
 ```
 
 
@@ -116,7 +121,12 @@ Content-Type: application/json
 400
 
 // 服务器错误
-500
+5xx
+
+Content-Type: application/json
+{
+  "message": "error message"
+}
 ```
 
 
@@ -140,11 +150,27 @@ Content-Type: application/json
 #### 返回
 
 ```
+// 成功
 200
 Content-Type: application/json
 
 {
-	// TODO 返回什么数据？
+ "frames":[{
+    "idx": 1000,
+    "label": 999,0,
+    "image_path": "path/of/image"
+ }]
+}
+
+// 请求参数非法
+400
+
+// 服务器错误
+5xx
+
+Content-Type: application/json
+{
+  "message": "error message"
 }
 ```
 
@@ -169,11 +195,23 @@ Content-Type: application/json
 #### 返回
 
 ```
+// 成功
 200
 Content-Type: application/json
 
 {
 	// TODO 返回什么数据？
+}
+
+// 请求参数非法
+400
+
+// 服务器错误
+5xx
+
+Content-Type: application/json
+{
+  "message": "error message"
 }
 ```
 
@@ -201,7 +239,12 @@ Content-Type: application/json
 200
 
 // 服务器错误
-500
+5xx
+
+Content-Type: application/json
+{
+  "message": "error message"
+}
 ```
 
 
@@ -228,7 +271,12 @@ Content-Type: application/json
 200
 
 // 服务器错误
-500
+5xx
+
+Content-Type: application/json
+{
+  "message": "error message"
+}
 ```
 
 
