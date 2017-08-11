@@ -8,4 +8,5 @@
 ./export_frames -i Media_URL -o OutputDir -c frame_count -interval check_time_interval -postfix picfmt -log logoutputflag
 
 Ex:
+
 ./export_frames -i test.mp4 -o ./pics -c 21 -interval 10 -postfix jpg -log 1
