@@ -24,8 +24,8 @@ type Message interface {
 	Encode() []byte
 	Decode([]byte)
 
-	SetID(id string)
-	ID() string
+	SetID(id []byte)
+	ID() []byte
 	SetCreatedAt(uint64)
 	CreatedAt() uint64
 	SetStatus(int)
@@ -34,18 +34,18 @@ type Message interface {
 
 // BaseMessage message common data
 type BaseMessage struct {
-	id        string
+	id        []byte
 	createdAt uint64
 	status    uint16
 }
 
 // SetID store the message id
-func (bm *BaseMessage) SetID(id string) {
+func (bm *BaseMessage) SetID(id []byte) {
 	bm.id = id
 }
 
 // ID return message id
-func (bm *BaseMessage) ID() string {
+func (bm *BaseMessage) ID() []byte {
 	return bm.id
 }
 
@@ -86,7 +86,7 @@ func (bm *BaseMessage) Encode() []byte {
 // Decode the raw bytes to `BaseMessage`
 func (bm *BaseMessage) Decode(bytes []byte) {
 	idLen := endian.Uint16(bytes)
-	bm.id = string(bytes[2 : 2+idLen])
+	bm.id = bytes[2 : 2+idLen]
 	bm.createdAt = endian.Uint64(bytes[2+idLen:])
 	bm.status = endian.Uint16(bytes[2+idLen+8:])
 }

@@ -8,7 +8,7 @@ import (
 
 func TestBaseMessage(t *testing.T) {
 	m := BaseMessage{
-		id:        "id",
+		id:        []byte("id"),
 		createdAt: 9999,
 		status:    StatusDeleted,
 	}

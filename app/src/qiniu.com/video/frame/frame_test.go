@@ -16,11 +16,11 @@ func TestCodec(t *testing.T) {
 			ImagePath: "a/b/c",
 		},
 	}
-	f.SetID("id")
+	f.SetID([]byte("id"))
 	f.SetCreatedAt(90900)
 	f.SetStatus(uint16(mq.StatusConsuming))
 
-	assert.Equal(t, "id", f.ID())
+	assert.Equal(t, []byte("id"), f.ID())
 	assert.Equal(t, uint64(90900), f.CreatedAt())
 
 	df := Message{}
