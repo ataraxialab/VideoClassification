@@ -6,35 +6,35 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestBaseMessage(t *testing.T) {
-	m := message{
-		id:        []byte("id"),
-		createdAt: 9999,
-		status:    StatusDeleted,
-		body:      []byte("body"),
+func TestMessageEx(t *testing.T) {
+	m := MessageEx{
+		ID:        []byte("id"),
+		CreatedAt: 9999,
+		Status:    StatusDeleted,
+		Body:      []byte("Body"),
 	}
 
-	md := message{}
+	md := MessageEx{}
 
 	md.Decode(m.Encode())
 
-	assert.Equal(t, m.id, md.id)
-	assert.Equal(t, m.createdAt, md.createdAt)
-	assert.Equal(t, uint16(StatusDeleted), md.status)
-	assert.Equal(t, m.body, md.body)
+	assert.Equal(t, m.ID, md.ID)
+	assert.Equal(t, m.CreatedAt, md.CreatedAt)
+	assert.Equal(t, uint16(StatusDeleted), md.Status)
+	assert.Equal(t, m.Body, md.Body)
 }
 
 func TestUpdateStatus(t *testing.T) {
-	m := message{
-		id:        []byte("id"),
-		createdAt: 9999,
-		status:    StatusDeleted,
-		body:      []byte("body"),
+	m := MessageEx{
+		ID:        []byte("id"),
+		CreatedAt: 9999,
+		Status:    StatusDeleted,
+		Body:      []byte("Body"),
 	}
 
 	bytes := m.Encode()
 	updateStatus(bytes, StatusPending)
 
 	m.Decode(bytes)
-	assert.Equal(t, uint16(StatusPending), m.status)
+	assert.Equal(t, uint16(StatusPending), m.Status)
 }

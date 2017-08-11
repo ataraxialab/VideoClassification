@@ -17,8 +17,9 @@ func (m mockMsg) Decode(bytes []byte) {
 }
 
 func TestEmbedded(t *testing.T) {
-	var mq MQ
-	mq = &EmbeddedMQ{}
+	mq := &EmbeddedMQ{}
+	var _ MQ = mq
+
 	mq.Open()
 	defer func() {
 		mq.Close()
@@ -34,18 +35,30 @@ func TestEmbedded(t *testing.T) {
 
 	assert.Nil(t, mq.Put(topic, wmsgs...))
 
-	rawMsgs, err := mq.Get(topic, 0, 3)
-	assert.Nil(t, err)
-	assert.Equal(t, 3, len(rawMsgs))
+	t.Run("get", func(t *testing.T) {
+		rawMsgs, err := mq.Get(topic, 0, 3)
+		assert.Nil(t, err)
+		assert.Equal(t, 3, len(rawMsgs))
 
-	for i, m := range rawMsgs {
-		assert.Equal(t, []byte(msgs[i]), m)
-	}
-	rawMsgs, err = mq.Get(topic, 1, 8)
-	assert.Nil(t, err)
-	assert.Equal(t, 5, len(rawMsgs))
+		for i, m := range rawMsgs {
+			assert.Equal(t, []byte(msgs[i]), m.Body)
+			assert.Equal(t, mq.messageID(uint64(i)), m.ID)
+		}
+		rawMsgs, err = mq.Get(topic, 1, 8)
+		assert.Nil(t, err)
+		assert.Equal(t, 5, len(rawMsgs))
 
-	for i, m := range rawMsgs {
-		assert.Equal(t, []byte(msgs[i+1]), m)
-	}
+		for i, m := range rawMsgs {
+			assert.Equal(t, []byte(msgs[i+1]), m.Body)
+			assert.Equal(t, mq.messageID(uint64(i+1)), m.ID)
+		}
+	})
+
+	t.Run("delete", func(t *testing.T) {
+		err := mq.Delete(topic, mq.messageID(uint64(4)), mq.messageID(uint64(5)))
+		assert.Nil(t, err)
+		rawMsgs, err := mq.Get(topic, 1, 8)
+		assert.Nil(t, err)
+		assert.Equal(t, 3, len(rawMsgs))
+	})
 }

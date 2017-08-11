@@ -51,11 +51,11 @@ func (mq *EmbeddedMQ) Put(topic string, val ...Message) error {
 
 		createdAt := time.Now().Unix()
 		for _, v := range val {
-			m := message{
-				id:        mq.messageID(id),
-				status:    StatusPending,
-				createdAt: uint64(createdAt),
-				body:      v.Encode(),
+			m := MessageEx{
+				ID:        mq.messageID(id),
+				Status:    StatusPending,
+				CreatedAt: uint64(createdAt),
+				Body:      v.Encode(),
 			}
 			err = bucket.Put(mq.messageID(id), m.Encode())
 			if err != nil {
@@ -68,9 +68,10 @@ func (mq *EmbeddedMQ) Put(topic string, val ...Message) error {
 	return err
 }
 
-func (mq *EmbeddedMQ) getMessage(topic string, from, count uint) ([][]byte, error) {
+// Get messages
+func (mq *EmbeddedMQ) Get(topic string, from, count uint) ([]MessageEx, error) {
 	db := mq.db
-	var vals [][]byte
+	var vals []MessageEx
 
 	err := db.Batch(func(tx *bolt.Tx) error {
 		bucket := tx.Bucket([]byte(topic))
@@ -82,10 +83,12 @@ func (mq *EmbeddedMQ) getMessage(topic string, from, count uint) ([][]byte, erro
 		min := from
 		max := min + count
 		k := mq.messageID(uint64(from))
-		vals = make([][]byte, 0, count)
+		vals = make([]MessageEx, 0, count)
 		for k, v := c.Seek(k); k != nil && min < max; k, v = c.Next() {
 			min++
-			vals = append(vals, v)
+			m := MessageEx{}
+			m.Decode(v)
+			vals = append(vals, m)
 		}
 
 		return nil
@@ -93,21 +96,24 @@ func (mq *EmbeddedMQ) getMessage(topic string, from, count uint) ([][]byte, erro
 	return vals, err
 }
 
-// Get messages
-func (mq *EmbeddedMQ) Get(topic string, from, count uint) ([][]byte, error) {
-	rawMsgs, err := mq.getMessage(topic, from, count)
-	if err != nil {
-		return nil, err
-	}
+// Delete message
+func (mq *EmbeddedMQ) Delete(topic string, ids ...[]byte) error {
+	db := mq.db
+	err := db.Batch(func(tx *bolt.Tx) error {
+		bucket := tx.Bucket([]byte(topic))
+		if bucket == nil {
+			return nil
+		}
 
-	vals := make([][]byte, 0, len(rawMsgs))
-	m := message{}
-	for _, rm := range rawMsgs {
-		m.Decode(rm)
-		vals = append(vals, m.body)
-	}
+		for _, k := range ids {
+			if err := bucket.Delete(k); err != nil {
+				return err
+			}
+		}
+		return nil
+	})
 
-	return vals, nil
+	return err
 }
 
 func (mq *EmbeddedMQ) messageID(id uint64) []byte {
