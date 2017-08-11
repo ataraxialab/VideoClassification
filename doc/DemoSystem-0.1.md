@@ -18,13 +18,12 @@
 生成3个随机序列，分别对应classIdx，videoIdx，frameIdx
 
 
-'''
-struct {
-	int clsIdx;
-	float vidIdx;
-	float frmIdx;
-}
-'''
+	struct {
+		int clsIdx;
+		float vidIdx;
+		float frmIdx;
+	}
+
 
 * 2. 解码函数
 
