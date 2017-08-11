@@ -4,6 +4,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+
+	"qiniu.com/video/mq"
 )
 
 func TestCodec(t *testing.T) {
@@ -16,6 +18,7 @@ func TestCodec(t *testing.T) {
 	}
 	f.SetID("id")
 	f.SetCreatedAt(90900)
+	f.SetStatus(uint16(mq.StatusConsuming))
 
 	assert.Equal(t, "id", f.ID())
 	assert.Equal(t, uint64(90900), f.CreatedAt())
@@ -28,4 +31,5 @@ func TestCodec(t *testing.T) {
 	assert.Equal(t, f.ImagePath, df.ImagePath)
 	assert.Equal(t, f.CreatedAt(), df.CreatedAt())
 	assert.Equal(t, f.ID(), df.ID())
+	assert.Equal(t, f.Status(), df.Status())
 }
