@@ -165,9 +165,9 @@ GET /frame
 Content-Type: application/json
 
 {
-  "pattern": "random",
-  "from": 0, // 起始位置
-  "count": 1 // 1 - 100
+  "pattern": "random|sample",  // 同上
+  "from": 0,                   // 起始位置
+  "count": 1                   // 1 - 100
 }
 ```
 
@@ -211,9 +211,9 @@ GET /flow
 Content-Type: application/json
 
 {
-  "pattern": "random",
-  "from": 0,
-  "count": 1 // 1 - 100
+  "pattern": "random|sample",  // 同上
+  "from": 0,                   // 起始位置
+  "count": 1                   // 1 - 100
 }
 ```
 
