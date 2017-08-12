@@ -7,13 +7,13 @@
   - [截帧方式](#%E6%88%AA%E5%B8%A7%E6%96%B9%E5%BC%8F)
   - [光流计算方式](#%E5%85%89%E6%B5%81%E8%AE%A1%E7%AE%97%E6%96%B9%E5%BC%8F)
   - [API](#api)
-    - [请求截帧](#%E8%AF%B7%E6%B1%82%E6%88%AA%E5%B8%A7)
+    - [截帧](#%E6%88%AA%E5%B8%A7)
       - [请求](#%E8%AF%B7%E6%B1%82)
       - [返回](#%E8%BF%94%E5%9B%9E)
-    - [请求计算光流](#%E8%AF%B7%E6%B1%82%E8%AE%A1%E7%AE%97%E5%85%89%E6%B5%81)
+    - [计算光流](#%E8%AE%A1%E7%AE%97%E5%85%89%E6%B5%81)
       - [请求](#%E8%AF%B7%E6%B1%82-1)
       - [返回](#%E8%BF%94%E5%9B%9E-1)
-      - [获取截帧结果](#%E8%8E%B7%E5%8F%96%E6%88%AA%E5%B8%A7%E7%BB%93%E6%9E%9C)
+    - [获取截帧结果](#%E8%8E%B7%E5%8F%96%E6%88%AA%E5%B8%A7%E7%BB%93%E6%9E%9C)
       - [请求](#%E8%AF%B7%E6%B1%82-2)
       - [返回](#%E8%BF%94%E5%9B%9E-2)
     - [获取光流结果](#%E8%8E%B7%E5%8F%96%E5%85%89%E6%B5%81%E7%BB%93%E6%9E%9C)
@@ -55,8 +55,7 @@
 
 ## 截帧方式
 
-TODO
-三种基本的截帧方式:
+四种基本的截帧方式:
 
 1. 选择一个视频随机的截取一段连续的原始图像
 2. 选择一个视频随机截取一段连续的光流图像
@@ -69,13 +68,13 @@ TODO
 
 ## 光流计算方式
 
-TODO
+参考 **截帧方式**
 
 
 
 ## API
 
-### 请求截帧
+### 截帧
 
 根据截帧模式对视频进行截帧，并保存结果。
 
@@ -86,7 +85,12 @@ POST /frame
 Content-Type: application/json
 
 {
-  "pattern": "random" // TODO 有哪些模式
+  "pattern": "random|sample",    // random: 随机截取一段，sample: 时间范围，然后在时间范围内随机
+  "op": "start|stop",            // start: 开始截帧生产数据, stop: 结束截帧
+  "params": {
+    "duration": 100,             // 截帧的时长
+    "interval": 100              // 播放时间间隔，sample时需要
+  }
 }
 ```
 
@@ -110,7 +114,7 @@ Content-Type: application/json
 
 
 
-### 请求计算光流
+### 计算光流
 
 根据截帧模式对视频进行计算光流，并保存结果。
 
@@ -121,7 +125,12 @@ POST /flow
 Content-Type: application/json
 
 {
-  "pattern": "random" // TODO 有哪些模式
+  "pattern": "random|sample",    // random: 随机截取一段，sample: 时间范围，然后在时间范围内随机
+  "op": "start|stop",            // start: 开始计算光流生产数据, stop: 结束计算
+  "params": {
+    "duration": 100,             // 计算光流的连续视频时长
+    "interval": 100              // 播放时间间隔，sample时需要
+  }
 }
 ```
 
@@ -145,7 +154,7 @@ Content-Type: application/json
 
 
 
-#### 获取截帧结果
+### 获取截帧结果
 
 根据截帧模式，获取截帧数据。
 
@@ -156,7 +165,7 @@ GET /frame
 Content-Type: application/json
 
 {
-  "pattern": "random", // TODO 有哪些模式
+  "pattern": "random",
   "from": 0, // 起始位置
   "count": 1 // 1 - 100
 }
@@ -202,8 +211,8 @@ GET /flow
 Content-Type: application/json
 
 {
-  "pattern": "random", // TODO 有哪些模式
-  "from": 0, // 起始位置
+  "pattern": "random",
+  "from": 0,
   "count": 1 // 1 - 100
 }
 ```
