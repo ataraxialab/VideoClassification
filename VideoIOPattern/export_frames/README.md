@@ -23,9 +23,6 @@ DoFrameExport函数增加接收任意位置解码功能
 
 decoder_worker.cpp 用于接收解码工作序列然后顺序执行解码请求
 工作流程：
-
-读取解码序列文件
-
-按照序列依次调用DoFrameExport函数解码对应N帧图像
-
-将解码的图像写到对应内存位置/Redis/落盘
+  读取解码序列文件
+  按照序列依次调用DoFrameExport函数解码对应N帧图像
+  将解码的图像写到对应内存位置/Redis/落盘
