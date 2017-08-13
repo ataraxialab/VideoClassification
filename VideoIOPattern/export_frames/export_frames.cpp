@@ -18,7 +18,7 @@
 #include "trans_frames.h"
 
 
-int ParseCmd(int iArgc, char*  pArgv[], char** ppInputURL, int* piTargetWidth, int*  piTargetHeight, int*  piSeekPos, int* piFrameCount, int* piInterval, int* pLogFlag, char** ppDumpURL, char** ppPostFix);
+int ParseCmd(int iArgc, char*  pArgv[], char** ppInputURL, int* piTargetWidth, int*  piTargetHeight, float*  pfSeekPos, int* piFrameCount, int* piInterval, int* pLogFlag, char** ppDumpURL, char** ppPostFix);
 
 
 int main(int argc, char*  argv[])
@@ -26,29 +26,29 @@ int main(int argc, char*  argv[])
 #ifdef _WIN32
 	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 #endif
-	S_Frames_Output*   pFrameOutArray[256] = { 0 };
-	int                iFrameOutCount = 256;
+	S_Frames_Output*   pFrameOutArray[MAX_ARRAY_COUNT] = { 0 };
+	int                iFrameOutCount = MAX_ARRAY_COUNT;
 	char*   pInputMediaUrl = NULL;
 	char*   pOutpuPicDir = NULL;
 	char*   pPostFix = NULL;
 	int     iDstWidth = 0;
 	int     iDstHeight = 0;
 	int     iFrameCount = 0;
-	int     iSeekPoint = 0;
+	float   fSeekPoint = 0;
 	int     iLogFlag = 0;
 	int     iInterval = 0;
 	int     iFrameArrayOutCount = 0;
 	int iRet = 0;
 
-	iRet = ParseCmd(argc, argv, &pInputMediaUrl, &iDstWidth, &iDstHeight, &iSeekPoint, &iFrameCount, &iInterval, &iLogFlag, &pOutpuPicDir, &pPostFix);
+	iRet = ParseCmd(argc, argv, &pInputMediaUrl, &iDstWidth, &iDstHeight, &fSeekPoint, &iFrameCount, &iInterval, &iLogFlag, &pOutpuPicDir, &pPostFix);
 	if (iRet != 0)
 	{
 		return 1;
 	}
 
-	if (pInputMediaUrl == NULL || iDstHeight == 0 || iDstWidth == 0)
+	if (pInputMediaUrl == NULL || iDstHeight == 0 || iDstWidth == 0 || fSeekPoint < 0 || fSeekPoint >= 1)
 	{
-		printf("not enough parameters!\n");
+		printf("invalid parameters or not enough parameters!\n");
 		return 1;
 	}
 
@@ -63,17 +63,12 @@ int main(int argc, char*  argv[])
 		iFrameCount = 10;
 	}
 
-	if (iInterval == 0)
-	{
-		iInterval = 10;
-	}
-
 	if (pOutpuPicDir == NULL)
 	{
 		pOutpuPicDir = ".";
 	}
 
-	iRet = DoFrameExport(pInputMediaUrl, iSeekPoint, iDstWidth, iDstHeight, AV_PIX_FMT_BGR24, iFrameCount, pFrameOutArray, 256, NULL, iInterval, &iFrameArrayOutCount);
+	iRet = DoFrameExport(pInputMediaUrl, fSeekPoint, iDstWidth, iDstHeight, AV_PIX_FMT_BGR24, iFrameCount, pFrameOutArray, 256, NULL, iInterval, &iFrameArrayOutCount);
 	CalOptFlow(pFrameOutArray, iFrameArrayOutCount, pInputMediaUrl, pOutpuPicDir, pPostFix, iLogFlag);
 	ReleaseFrameOutput(pFrameOutArray, iFrameArrayOutCount);
 #ifdef _WIN32
@@ -83,7 +78,7 @@ int main(int argc, char*  argv[])
 }
 
 
-int ParseCmd(int iArgc, char*  pArgv[], char** ppInputURL, int* piTargetWidth, int*  piTargetHeight, int*  piSeekPos, int* piFrameCount, int* piInterval, int* pLogFlag, char** ppDumpURL, char** ppPostFix)
+int ParseCmd(int iArgc, char*  pArgv[], char** ppInputURL, int* piTargetWidth, int*  piTargetHeight, float*  pfSeekPos, int* piFrameCount, int* piInterval, int* pLogFlag, char** ppDumpURL, char** ppPostFix)
 {
 	int  iIndex = 0;
 	float    fRate = 0;
@@ -93,7 +88,7 @@ int ParseCmd(int iArgc, char*  pArgv[], char** ppInputURL, int* piTargetWidth, i
 
 	*piTargetWidth = 0;
 	*piTargetHeight = 0;
-	*piSeekPos = 0;
+	*pfSeekPos = 0;
 	*piFrameCount = 0;
 	*pLogFlag = 0;
 
@@ -101,7 +96,7 @@ int ParseCmd(int iArgc, char*  pArgv[], char** ppInputURL, int* piTargetWidth, i
 	{
 		printf("need more parameters!\n");
 		printf("-i input_url     set the input url\n"
-			"-ss time_off        set the start time offset\n"
+			"-ss time_off        set the start time offset pencent\n"
 			"-s size             set frame size(WxH or abbreviation)\n"
 			"-o dump url         set the dump url \n"
 			"-interval interval  set the loop count \n"
@@ -122,7 +117,7 @@ int ParseCmd(int iArgc, char*  pArgv[], char** ppInputURL, int* piTargetWidth, i
 
 		if (strcmp("-ss", pCurOpt) == 0)
 		{
-			iRet = sscanf(pArgv[++iIndex], "%d", piSeekPos);
+			iRet = sscanf(pArgv[++iIndex], "%f", pfSeekPos);
 		}
 
 		if (strcmp("-s", pCurOpt) == 0)
