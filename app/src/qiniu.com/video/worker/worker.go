@@ -7,13 +7,14 @@ import (
 
 // Server interface
 type Server interface {
-	StartBuild(target builder.Target, pattern builder.Pattern, mq mq.MQ) error
+	StartBuild(target builder.Target, pattern builder.Pattern) error
 	StopBuild(target builder.Target, pattern builder.Pattern) error
 	Close() error
 }
 
 type workerImpl struct {
 	impl builder.Implement
+	mq   mq.MQ
 }
 
 // StartBuild the building
@@ -40,7 +41,7 @@ func (w *workerImpl) Close() error {
 }
 
 // CreateWorker create build worker
-func CreateWorker(impl builder.Implement) (Server, error) {
+func CreateWorker(impl builder.Implement, mq mq.MQ) (Server, error) {
 	// TODO
 	return nil
 }
