@@ -15,7 +15,7 @@
 
 #endif
 
-int DoFrameExport(char*  pInputURL, int iSeekPoint, int  iDstWidth, int iDstHeight, enum AVPixelFormat  eDstPixelFmt, int iFrameCount, S_Frames_Output** ppsFramesOutput,
+int DoFrameExport(char*  pInputURL, float fSeekPointPercent, int  iDstWidth, int iDstHeight, enum AVPixelFormat  eDstPixelFmt, int iFrameCount, S_Frames_Output** ppsFramesOutput,
 	int iMaxFrameOutputSize, char* pExtra, int iInterval, int* piActArrayCount)
 {
 	AVFormatContext *pIfmt_ctx = NULL;
@@ -135,11 +135,25 @@ int DoFrameExport(char*  pInputURL, int iSeekPoint, int  iDstWidth, int iDstHeig
 			}
 		}
 
-		illDuration = pIfmt_ctx->duration / 1000;
-		iCount = illDuration / (iInterval * 1000);
-		if (iCount == 0)
+		iSeekConv = (pIfmt_ctx->duration*fSeekPointPercent)/AV_TIME_BASE;
+
+		if(iInterval > 0)
+		{
+			illDuration = pIfmt_ctx->duration*(1-fSeekPointPercent) / 1000;
+			iCount = illDuration / (iInterval * 1000);
+			if (iCount == 0)
+			{
+				iCount = 1;
+			}
+		}
+		else
 		{
 			iCount = 1;
+		}
+			
+		if(iCount >= MAX_ARRAY_COUNT)
+		{
+			iCount = MAX_ARRAY_COUNT -1;
 		}
 
 		for (iIndex = 0; iIndex < iCount; iIndex++)
@@ -155,16 +169,20 @@ int DoFrameExport(char*  pInputURL, int iSeekPoint, int  iDstWidth, int iDstHeig
 				break;
 			}
 
-			iRet = av_seek_frame(pIfmt_ctx, -1, iIndex*iInterval*AV_TIME_BASE, AVSEEK_FLAG_BACKWARD);
+			iRet = av_seek_frame(pIfmt_ctx, -1, (iSeekConv+iIndex*iInterval)*AV_TIME_BASE, AVSEEK_FLAG_BACKWARD);
 			if (iRet != 0)
 			{
 				break;
 			}
 
-			while (iGotFrameCount < iFrameCount)
+			while (iGotFrameCount < iFrameCount && iGotFrameCount < MAX_FRAME_COUNT)
 			{
 				av_init_packet(&pkt);
 				iRet = av_read_frame(pIfmt_ctx, &pkt);
+				if(iRet != 0)
+				{
+					break;
+				}
 				if (pkt.stream_index == iVideoIndex && iRet == 0)
 				{
 					iRet = avcodec_send_packet(pCodecCtx, &pkt);

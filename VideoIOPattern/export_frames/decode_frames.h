@@ -65,7 +65,7 @@ extern "C"
 #define ERR_CANNOT_ALLOC_MEMORY                    0x80000008
 #define ERR_ENCODING_JPG                           0x80000009
 #define MAX_FRAME_COUNT                            0x100
-
+#define MAX_ARRAY_COUNT                            0x100
 
 typedef struct
 {
@@ -78,7 +78,7 @@ typedef struct
 }S_Frames_Output;
 
 int InitScaleCTX(int  iSrcWidth, int iSrcHeight, enum AVPixelFormat  eSrcPixelFmt, int  iDstWidth, int iDstHeight, enum AVPixelFormat  eDstPixelFmt, struct SwsContext** ppSwsCTX);
-int DoFrameExport(char*  pInputURL, int iSeekPoint, int  iDstWidth, int iDstHeight, enum AVPixelFormat  eDstPixelFmt, int iFrameCount, S_Frames_Output** ppsFramesOutput, int iMaxOutputSize, char* pExtra, int iInterval, int* piActArrayCount);
+int DoFrameExport(char*  pInputURL, float fSeekPointPercnet, int  iDstWidth, int iDstHeight, enum AVPixelFormat  eDstPixelFmt, int iFrameCount, S_Frames_Output** ppsFramesOutput, int iMaxOutputSize, char* pExtra, int iInterval, int* piActArrayCount);
 int ConvVideoPacket(AVFrame*  pAVFrame, int iTargetWidth, int iTargetHeight, enum AVPixelFormat  eDstPixelFmt, struct SwsContext*  pSws_ctx, S_Frames_Output* psFramesOutput, int iFrameIndex);
 void ReleaseFrameOutput(S_Frames_Output**  ppFrameOutput, int  iFrameOutputCount);
 #endif
