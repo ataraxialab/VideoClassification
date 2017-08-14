@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"qiniu.com/video/builder"
+	"qiniu.com/video/logger"
 	"qiniu.com/video/mq"
 )
 
@@ -19,6 +20,7 @@ type serverImpl struct {
 	mq           mq.MQ
 	workers      map[string]worker
 	createWorker func(string, interface{}, builder.Builder, mq.Codec) worker
+	logger       *logger.Logger
 }
 
 // worker unique id
@@ -43,6 +45,7 @@ func (s *serverImpl) StartBuild(target builder.Target,
 			pattern)
 	}
 
+	logger.Debugf("start build %s:%s", target, pattern)
 	dataBuilder := builder.GetBuilder(s.impl, target, pattern)
 	if dataBuilder == nil {
 		return fmt.Errorf(
@@ -61,6 +64,7 @@ func (s *serverImpl) StartBuild(target builder.Target,
 func (s *serverImpl) StopBuild(target builder.Target,
 	pattern builder.Pattern,
 ) error {
+	logger.Debugf("start build %s:%s", target, pattern)
 	uid := workerUID(target, pattern)
 	worker := s.workers[uid]
 	if worker == nil {
@@ -96,7 +100,10 @@ func CreateServer(impl builder.Implement, q mq.MQ) (Server, error) {
 		impl:    impl,
 		mq:      q,
 		workers: make(map[string]worker),
+		logger:  logger.Std,
 	}
+	srv.logger.Level = logger.Ldebug
+
 	srv.createWorker = func(uid string, params interface{},
 		dataBuilder builder.Builder, codec mq.Codec) worker {
 		return &workerImpl{
@@ -105,6 +112,7 @@ func CreateServer(impl builder.Implement, q mq.MQ) (Server, error) {
 			codec:       codec,
 			params:      params,
 			dataBuilder: dataBuilder,
+			logger:      srv.logger,
 		}
 	}
 	return srv, nil

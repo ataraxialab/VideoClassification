@@ -120,4 +120,6 @@ func TestCreateServer(t *testing.T) {
 	srv, err := CreateServer(impl, mockMQ{})
 	assert.Nil(t, err)
 	assert.NotNil(t, srv)
+
+	var _ Server = srv
 }
