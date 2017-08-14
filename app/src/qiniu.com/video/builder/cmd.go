@@ -7,19 +7,23 @@ const (
 
 type frameRandom struct{}
 
-func (f frameRandom) Builder(params interface{}) ([]interface{}, error) {
+func (f frameRandom) Build(video string,
+	params interface{},
+) ([]interface{}, error) {
 	// TODO
-	return nil
+	return nil, nil
 }
 
 type flowRandom struct{}
 
-func (f flowRandom) Builder(params interface{}) ([]interface{}, error) {
+func (f flowRandom) Build(video string,
+	params interface{},
+) ([]interface{}, error) {
 	// TODO
-	return nil
+	return nil, nil
 }
 
 func init() {
-	register(Cmd, Frame, PatternRandom, frameRandom{})
-	register(Cmd, Flow, PatternRandom, flowRandom{})
+	Register(Cmd, Frame, PatternRandom, frameRandom{})
+	Register(Cmd, Flow, PatternRandom, flowRandom{})
 }

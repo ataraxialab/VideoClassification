@@ -30,6 +30,12 @@ type Encoder interface {
 	Encode(interface{}) []byte
 }
 
+// Codec encode/decode between byte and interface{}
+type Codec interface {
+	Encoder
+	Decoder
+}
+
 // MessageEx message common data
 type MessageEx struct {
 	CreatedAt uint64

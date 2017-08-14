@@ -1,62 +1,111 @@
-package worker
+package server
 
 import (
+	"fmt"
+
 	"qiniu.com/video/builder"
 	"qiniu.com/video/mq"
 )
 
 // Server interface
 type Server interface {
-	StartBuild(target builder.Target, pattern builder.Pattern) error
+	StartBuild(target builder.Target, pattern builder.Pattern, params interface{}) error
 	StopBuild(target builder.Target, pattern builder.Pattern) error
 	Close() error
 }
 
-type workerImpl struct {
-	impl builder.Implement
-	mq   mq.MQ
+type serverImpl struct {
+	impl         builder.Implement
+	mq           mq.MQ
+	workers      map[string]worker
+	createWorker func(string, interface{}, builder.Builder, mq.Codec) worker
+}
+
+// worker unique id
+func workerUID(target builder.Target, pattern builder.Pattern) string {
+	return string(target) + "_" + string(pattern)
 }
 
 // StartBuild the building
-func (w *workerImpl) StartBuild(target builder.Target,
+func (s *serverImpl) StartBuild(target builder.Target,
 	pattern builder.Pattern,
-	mq mq.MQ,
+	params interface{},
 ) error {
-	// TODO
+	codec := mq.GetCodec(target, pattern)
+	if codec == nil {
+		return fmt.Errorf("no codec of target:%s,pattern:%s", target, pattern)
+	}
+
+	uid := workerUID(target, pattern)
+	if s.workers[uid] != nil {
+		return fmt.Errorf("worker of target:%s, pattern:%s exits",
+			target,
+			pattern)
+	}
+
+	dataBuilder := builder.GetBuilder(s.impl, target, pattern)
+	if dataBuilder == nil {
+		return fmt.Errorf(
+			"no build implemented of impl:%s, target:%s, pattern:%s",
+			s.impl,
+			target,
+			pattern)
+	}
+	worker := s.createWorker(uid, params, dataBuilder, codec)
+	s.workers[uid] = worker
+	worker.start()
 	return nil
 }
 
 // StopBuild the building
-func (w *workerImpl) StopBuild(target builder.Target,
+func (s *serverImpl) StopBuild(target builder.Target,
 	pattern builder.Pattern,
 ) error {
-	// TODO
+	uid := workerUID(target, pattern)
+	worker := s.workers[uid]
+	if worker == nil {
+		return fmt.Errorf("no worker exists of target:%s, pattern:%s",
+			target, pattern)
+	}
+	worker.stop()
+	delete(s.workers, uid)
 	return nil
 }
 
 // Close workers
-func (w *workerImpl) Close() error {
-	// TODO
+func (s *serverImpl) Close() error {
+	for uid, w := range s.workers {
+		_ = uid
+		w.stop()
+		delete(s.workers, uid)
+	}
 	return nil
 }
 
-// CreateWorker create build worker
-func CreateWorker(impl builder.Implement, mq mq.MQ) (Server, error) {
-	// TODO
-	return nil
-}
+// CreateServer create build server
+func CreateServer(impl builder.Implement, q mq.MQ) (Server, error) {
+	if !builder.HasImplement(impl) {
+		return nil, fmt.Errorf("no implementation of %s", impl)
+	}
 
-type worker struct {
-	close   <-chan int
-	target  builder.Target
-	pattern builder.Pattern
-	mq      mq.MQ
-}
+	if q == nil {
+		return nil, fmt.Errorf("nil mq")
+	}
 
-func (w *worker) start() {
-	// TODO
-}
-
-func (w *worker) stop() {
-	w.close <- 0
+	srv := &serverImpl{
+		impl:    impl,
+		mq:      q,
+		workers: make(map[string]worker),
+	}
+	srv.createWorker = func(uid string, params interface{},
+		dataBuilder builder.Builder, codec mq.Codec) worker {
+		return &workerImpl{
+			uid:         uid,
+			mq:          q,
+			codec:       codec,
+			params:      params,
+			dataBuilder: dataBuilder,
+		}
+	}
+	return srv, nil
 }
