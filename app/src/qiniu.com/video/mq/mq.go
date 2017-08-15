@@ -18,6 +18,7 @@ type MQ interface {
 	Put(topic string, encoder Encoder, val ...interface{}) error
 	Get(topic string, from, count uint, decoder Decoder) ([]MessageEx, error)
 	Delete(topic string, ids ...[]byte) error
+	DeleteTopic(topic string) error
 }
 
 // Decoder decode the bytes to user type

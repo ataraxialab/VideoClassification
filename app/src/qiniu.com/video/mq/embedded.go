@@ -120,6 +120,14 @@ func (mq *EmbeddedMQ) Delete(topic string, ids ...[]byte) error {
 	return err
 }
 
+// DeleteTopic deletes topic
+func (mq *EmbeddedMQ) DeleteTopic(topic string) error {
+	db := mq.db
+	return db.Update(func(tx *bolt.Tx) error {
+		return tx.DeleteBucket([]byte(topic))
+	})
+}
+
 func (mq *EmbeddedMQ) messageID(id uint64) []byte {
 	bytes := make([]byte, 8)
 	mq.endian.PutUint64(bytes, id)
