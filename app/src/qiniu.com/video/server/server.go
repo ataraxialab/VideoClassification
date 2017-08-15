@@ -82,7 +82,28 @@ func (s *serverImpl) GetResult(target builder.Target,
 	pattern builder.Pattern,
 	from, to uint,
 ) (interface{}, error) {
-	return nil, nil
+	uid := workerUID(target, pattern)
+	if s.workers[uid] == nil {
+		return nil, fmt.Errorf("no worker exists of target:%s, pattern:%s",
+			target, pattern)
+	}
+
+	codec := mq.GetCodec(target, pattern)
+	if codec == nil {
+		return nil, fmt.Errorf("no codec of target:%s,pattern:%s", target, pattern)
+	}
+
+	msgs, err := s.mq.Get(uid, from, to, codec)
+	if err != nil {
+		return nil, err
+	}
+
+	ret := make([]interface{}, len(msgs))
+	for i, m := range msgs {
+		ret[i] = m.Body
+	}
+
+	return ret, nil
 }
 
 // Close workers

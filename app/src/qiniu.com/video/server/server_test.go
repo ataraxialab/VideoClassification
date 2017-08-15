@@ -91,27 +91,35 @@ func TestServer(t *testing.T) {
 
 type mockMQ struct{}
 
-func (mq mockMQ) Open() error {
+func (q mockMQ) Open() error {
 	return nil
 }
 
-func (mq mockMQ) Close() error {
+func (q mockMQ) Close() error {
 	return nil
 }
 
-func (mq mockMQ) Put(topic string,
+func (q mockMQ) Put(topic string,
 	encoder mq.Encoder,
 	val ...interface{},
 ) error {
 	return nil
 }
 
-func (mq mockMQ) Get(topic string, from, count uint,
+func (q mockMQ) Get(topic string, from, count uint,
 	decoder mq.Decoder) ([]mq.MessageEx, error) {
-	return nil, nil
+	return []mq.MessageEx{
+		mq.MessageEx{
+			Body: "test",
+		},
+	}, nil
 }
 
-func (mq mockMQ) Delete(topic string, ids ...[]byte) error {
+func (q mockMQ) Delete(topic string, ids ...[]byte) error {
+	return nil
+}
+
+func (q mockMQ) DeleteTopic(topic string) error {
 	return nil
 }
 
@@ -125,4 +133,23 @@ func TestCreateServer(t *testing.T) {
 	assert.NotNil(t, srv)
 
 	var _ Server = srv
+}
+
+func TestGetResult(t *testing.T) {
+	srv, err := CreateServer(impl, mockMQ{})
+	var _ Server = srv
+	assert.Nil(t, err)
+
+	_, err = srv.GetResult(target, pattern, 0, 1)
+	assert.NotNil(t, err)
+
+	err = srv.StartBuilding(target, pattern, nil)
+	assert.Nil(t, err)
+
+	ret, err := srv.GetResult(target, pattern, 0, 1)
+	slice, ok := ret.([]interface{})
+	assert.True(t, ok)
+	assert.Equal(t, slice[0], "test")
+
+	srv.Close()
 }
