@@ -137,13 +137,16 @@ Content-Type: application/json
 200
 Content-Type: application/json
 
-{
- "frames":[{
+[{
     "idx": 1000,
     "label": 999.0,
-    "image_path": "path/of/image"
- }]
-}
+    "image_path": "path/of/image0"
+  }, {
+    "idx": 1001,
+    "label": 999.0,
+    "image_path": "path/of/image1"
+  }
+]
 
 // 非法请求
 4xx
