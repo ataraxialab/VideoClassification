@@ -51,7 +51,7 @@ func (w *workerImpl) start() {
 				<-w.goon
 			}
 
-			ret, err := w.dataBuilder.Build(w.selectVideo(), w.params)
+			ret, err := w.dataBuilder.Build(w.params)
 			if err != nil {
 				logger.Errorf("build error:%v", err)
 				continue

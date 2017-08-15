@@ -49,7 +49,7 @@ func (mockCodec) Decode([]byte) interface{} {
 
 type mockBuilder int
 
-func (b *mockBuilder) Build(string, interface{}) ([]interface{}, error) {
+func (b *mockBuilder) Build(interface{}) ([]interface{}, error) {
 	*b++
 	return nil, nil
 }

@@ -2,7 +2,7 @@ package builder
 
 // Builder build the data from vido
 type Builder interface {
-	Build(video string, params interface{}) ([]interface{}, error)
+	Build(params interface{}) ([]interface{}, error)
 	Clean(interface{}) error
 }
 
