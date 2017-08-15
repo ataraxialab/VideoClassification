@@ -120,14 +120,11 @@ Content-Type: application/json
 #### 请求
 
 ```
-GET /:target                   // target = frame(截帧) | flow(光流)
-Content-Type: application/json
-
-{
-  "pattern": "random|sample",  // 同上
-  "from": 0,                   // 起始位置
-  "count": 1                   // 1 - 100
-}
+GET /:target/:pattern/:from/:count
+// target = frame(截帧) | flow(光流)
+// pattern = random|sample
+// from >= 0
+// count >= 0
 ```
 
 #### 返回
