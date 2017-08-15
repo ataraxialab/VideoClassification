@@ -1,4 +1,4 @@
-package frame
+package flow
 
 import (
 	"testing"
@@ -11,17 +11,17 @@ import (
 )
 
 func TestCodec(t *testing.T) {
-	f := Frame{
+	f := Flow{
 		Index:     1,
 		Label:     .123,
 		ImagePath: "a/b/c",
 	}
 
-	df := Decoder().Decode(Encoder().Encode(f)).(Frame)
+	df := Decoder().Decode(Encoder().Encode(f)).(Flow)
 
 	assert.Equal(t, f.Index, df.Index)
 	assert.Equal(t, f.Label, df.Label)
 	assert.Equal(t, f.ImagePath, df.ImagePath)
 
-	assert.NotNil(t, mq.GetCodec(target.Frame, pattern.Random))
+	assert.NotNil(t, mq.GetCodec(target.Flow, pattern.Random))
 }

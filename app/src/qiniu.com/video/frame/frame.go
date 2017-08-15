@@ -5,6 +5,8 @@ import (
 	"math"
 
 	"qiniu.com/video/mq"
+	"qiniu.com/video/pattern"
+	"qiniu.com/video/target"
 )
 
 var endian = binary.BigEndian
@@ -40,6 +42,10 @@ func (c frameCodec) Decode(bytes []byte) interface{} {
 	f.ImagePath = string(bytes[4+4+2 : 4+4+2+imagePathLen])
 
 	return f
+}
+
+func init() {
+	mq.Register(target.Frame, pattern.Random, frameCodec{})
 }
 
 var fc frameCodec
