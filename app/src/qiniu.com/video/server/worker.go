@@ -1,6 +1,8 @@
 package server
 
 import (
+	"time"
+
 	"qiniu.com/video/builder"
 	"qiniu.com/video/logger"
 	"qiniu.com/video/mq"
@@ -35,6 +37,14 @@ type workerImpl struct {
 
 func (w *workerImpl) start() {
 	w.goon = make(chan int, 1)
+	go func() {
+		w.logger.Info("start clean")
+		from, count, expireTime := uint(0), uint(100), int64(time.Minute*30)
+		for w.status != Stop {
+			time.Sleep(5 * time.Minute)
+			w.clean(from, count, expireTime)
+		}
+	}()
 	go func() {
 		for w.status != Stop {
 			if w.status == Pause {
@@ -72,4 +82,32 @@ func (w *workerImpl) proceed() {
 func (w *workerImpl) selectVideo() string {
 	// TODO
 	return ""
+}
+
+func (w *workerImpl) clean(from, count uint, expireTime int64) {
+	msgs, err := w.mq.Get(w.uid, from, count, w.codec)
+	if err != nil {
+		w.logger.Errorf("clean get data error:%v", err)
+		return
+	}
+
+	if len(msgs) == 0 {
+		return
+	}
+
+	keys := make([][]byte, 0, len(msgs))
+	now := time.Now().Unix()
+	for _, m := range msgs {
+		if now-int64(m.CreatedAt) < expireTime {
+			break
+		}
+		err := w.dataBuilder.Clean(m.Body)
+		if err != nil {
+			w.logger.Errorf("clean resource error:%v", m.Body)
+			continue
+		}
+		keys = append(keys, m.ID)
+	}
+
+	w.mq.Delete(w.uid, keys...)
 }

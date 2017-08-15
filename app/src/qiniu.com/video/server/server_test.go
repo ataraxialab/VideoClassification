@@ -52,6 +52,11 @@ func (b *mockBuilder) Build(string, interface{}) ([]interface{}, error) {
 	return nil, nil
 }
 
+func (b *mockBuilder) Clean(interface{}) error {
+	*b++
+	return nil
+}
+
 const (
 	impl    = builder.Implement("mockImpl")
 	target  = builder.Target("mockTarget")
@@ -70,6 +75,7 @@ func TestServer(t *testing.T) {
 			impl:         impl,
 			workers:      make(map[string]worker),
 			createWorker: createWorker,
+			mq:           &mockMQ{},
 		},
 	}
 	err := server.StartBuilding(target, pattern, nil)
@@ -99,33 +105,48 @@ func TestServer(t *testing.T) {
 	assert.Equal(t, 0, len(server.workers))
 }
 
-type mockMQ struct{}
+type mockMQ struct {
+	deleteCount int
+}
 
-func (q mockMQ) Open() error {
+func (q *mockMQ) Open() error {
 	return nil
 }
 
-func (q mockMQ) Close() error {
+func (q *mockMQ) Close() error {
 	return nil
 }
 
-func (q mockMQ) Put(topic string,
+func (q *mockMQ) Put(topic string,
 	encoder mq.Encoder,
 	val ...interface{},
 ) error {
 	return nil
 }
 
-func (q mockMQ) Get(topic string, from, count uint,
+func (q *mockMQ) Get(topic string, from, count uint,
 	decoder mq.Decoder) ([]mq.MessageEx, error) {
 	return []mq.MessageEx{
 		mq.MessageEx{
-			Body: "test",
+			Body:      "test",
+			ID:        []byte("1"),
+			CreatedAt: uint64(time.Now().Unix() - int64(time.Millisecond*200)),
+		},
+		mq.MessageEx{
+			Body:      "test",
+			ID:        []byte("1"),
+			CreatedAt: uint64(time.Now().Unix() - int64(time.Millisecond*100)),
+		},
+		mq.MessageEx{
+			Body:      "test",
+			ID:        []byte("1"),
+			CreatedAt: uint64(time.Now().Unix() + int64(time.Hour)),
 		},
 	}, nil
 }
 
-func (q mockMQ) Delete(topic string, ids ...[]byte) error {
+func (q *mockMQ) Delete(topic string, ids ...[]byte) error {
+	q.deleteCount = len(ids)
 	return nil
 }
 
@@ -138,7 +159,7 @@ func TestCreateServer(t *testing.T) {
 	assert.NotNil(t, err)
 	_, err = CreateServer(impl, nil)
 	assert.NotNil(t, err)
-	srv, err := CreateServer(impl, mockMQ{})
+	srv, err := CreateServer(impl, &mockMQ{})
 	assert.Nil(t, err)
 	assert.NotNil(t, srv)
 
@@ -146,7 +167,7 @@ func TestCreateServer(t *testing.T) {
 }
 
 func TestGetResult(t *testing.T) {
-	srv, err := CreateServer(impl, mockMQ{})
+	srv, err := CreateServer(impl, &mockMQ{})
 	var _ Server = srv
 	assert.Nil(t, err)
 
@@ -168,7 +189,7 @@ func TestWorker(t *testing.T) {
 	builder := mockBuilder(0)
 	w := &workerImpl{
 		uid:         "test-worker",
-		mq:          mockMQ{},
+		mq:          &mockMQ{},
 		codec:       mockCodec{},
 		dataBuilder: &builder,
 		logger:      logger.Std,
@@ -192,4 +213,31 @@ func TestWorker(t *testing.T) {
 	time.Sleep(1000 * time.Millisecond)
 	assert.True(t, cnt == builder || cnt+1 == builder)
 	assert.Equal(t, w.status, Stop)
+}
+
+func TestClean(t *testing.T) {
+	builder := mockBuilder(0)
+	q := &mockMQ{}
+	w := &workerImpl{
+		uid:         "test-worker",
+		mq:          q,
+		codec:       mockCodec{},
+		dataBuilder: &builder,
+		logger:      logger.Std,
+	}
+
+	builder = 10
+	w.clean(uint(0), uint(3), int64(400*time.Millisecond))
+	assert.Equal(t, 10, int(builder))
+	assert.Equal(t, 0, q.deleteCount)
+
+	builder = 0
+	w.clean(uint(0), uint(3), int64(200*time.Millisecond))
+	assert.Equal(t, 1, int(builder))
+	assert.Equal(t, 1, q.deleteCount)
+
+	builder = 0
+	w.clean(uint(0), uint(3), int64(50*time.Millisecond))
+	assert.Equal(t, 2, int(builder))
+	assert.Equal(t, 2, q.deleteCount)
 }
