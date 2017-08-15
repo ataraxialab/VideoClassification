@@ -55,6 +55,8 @@ func (s *serverImpl) StartBuilding(target builder.Target,
 			target,
 			pattern)
 	}
+	// make sure queue is clean
+	s.mq.DeleteTopic(uid)
 	worker := s.createWorker(uid, params, dataBuilder, codec)
 	s.workers[uid] = worker
 	worker.start()
