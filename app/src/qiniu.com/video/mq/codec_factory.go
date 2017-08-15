@@ -1,24 +1,25 @@
 package mq
 
 import (
-	"qiniu.com/video/builder"
+	"qiniu.com/video/pattern"
+	"qiniu.com/video/target"
 )
 
-var codecs = make(map[builder.Target]map[builder.Pattern]Codec)
+var codecs = make(map[target.Target]map[pattern.Pattern]Codec)
 
 // Register register codec for mq message
-func Register(target builder.Target, pattern builder.Pattern, codec Codec) {
-	tCodec := codecs[target]
+func Register(t target.Target, p pattern.Pattern, codec Codec) {
+	tCodec := codecs[t]
 	if tCodec == nil {
-		tCodec = make(map[builder.Pattern]Codec)
-		codecs[target] = tCodec
+		tCodec = make(map[pattern.Pattern]Codec)
+		codecs[t] = tCodec
 	}
 
-	tCodec[pattern] = codec
+	tCodec[p] = codec
 }
 
 // GetCodec return the mq codec by target and pattern
-func GetCodec(target builder.Target, pattern builder.Pattern) Codec {
+func GetCodec(target target.Target, pattern pattern.Pattern) Codec {
 	tCodec := codecs[target]
 	if tCodec == nil {
 		return nil

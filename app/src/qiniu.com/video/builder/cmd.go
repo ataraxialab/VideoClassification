@@ -1,5 +1,10 @@
 package builder
 
+import (
+	"qiniu.com/video/pattern"
+	"qiniu.com/video/target"
+)
+
 const (
 	// Cmd call external command to build data
 	Cmd Implement = "cmd"
@@ -30,6 +35,6 @@ func (f flowRandom) Clean(result interface{}) error {
 }
 
 func init() {
-	Register(Cmd, targetFrame, patternRandom, frameRandom{})
-	Register(Cmd, targetFlow, patternRandom, flowRandom{})
+	Register(Cmd, target.Frame, pattern.Random, frameRandom{})
+	Register(Cmd, target.Flow, pattern.Random, flowRandom{})
 }

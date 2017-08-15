@@ -10,20 +10,21 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"qiniu.com/video/builder"
+	"qiniu.com/video/pattern"
+	"qiniu.com/video/target"
 )
 
 type mockServer int
 
-func (s *mockServer) StartBuilding(target builder.Target, pattern builder.Pattern, params interface{}) error {
+func (s *mockServer) StartBuilding(target target.Target, pattern pattern.Pattern, params interface{}) error {
 	*s++
 	return nil
 }
-func (s *mockServer) StopBuilding(target builder.Target, pattern builder.Pattern) error {
+func (s *mockServer) StopBuilding(target target.Target, pattern pattern.Pattern) error {
 	*s--
 	return nil
 }
-func (s *mockServer) GetResult(target builder.Target, pattern builder.Pattern, from, to uint) (interface{}, error) {
+func (s *mockServer) GetResult(target target.Target, pattern pattern.Pattern, from, to uint) (interface{}, error) {
 	return []int{1, 2, 3}, nil
 }
 

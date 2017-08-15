@@ -6,13 +6,15 @@ import (
 	"qiniu.com/video/builder"
 	"qiniu.com/video/logger"
 	"qiniu.com/video/mq"
+	"qiniu.com/video/pattern"
+	"qiniu.com/video/target"
 )
 
 // Server interface
 type Server interface {
-	StartBuilding(target builder.Target, pattern builder.Pattern, params interface{}) error
-	StopBuilding(target builder.Target, pattern builder.Pattern) error
-	GetResult(target builder.Target, pattern builder.Pattern, from, to uint) (interface{}, error)
+	StartBuilding(target target.Target, pattern pattern.Pattern, params interface{}) error
+	StopBuilding(target target.Target, pattern pattern.Pattern) error
+	GetResult(target target.Target, pattern pattern.Pattern, from, to uint) (interface{}, error)
 	Close() error
 }
 
@@ -25,13 +27,13 @@ type serverImpl struct {
 }
 
 // worker unique id
-func workerUID(target builder.Target, pattern builder.Pattern) string {
+func workerUID(target target.Target, pattern pattern.Pattern) string {
 	return string(target) + "_" + string(pattern)
 }
 
 // StartBuilding the building
-func (s *serverImpl) StartBuilding(target builder.Target,
-	pattern builder.Pattern,
+func (s *serverImpl) StartBuilding(target target.Target,
+	pattern pattern.Pattern,
 	params interface{},
 ) error {
 	codec := mq.GetCodec(target, pattern)
@@ -64,8 +66,8 @@ func (s *serverImpl) StartBuilding(target builder.Target,
 }
 
 // StopBuilding the building
-func (s *serverImpl) StopBuilding(target builder.Target,
-	pattern builder.Pattern,
+func (s *serverImpl) StopBuilding(target target.Target,
+	pattern pattern.Pattern,
 ) error {
 	logger.Debugf("start build %s:%s", target, pattern)
 	uid := workerUID(target, pattern)
@@ -80,8 +82,8 @@ func (s *serverImpl) StopBuilding(target builder.Target,
 }
 
 // GetResult returns the building result
-func (s *serverImpl) GetResult(target builder.Target,
-	pattern builder.Pattern,
+func (s *serverImpl) GetResult(target target.Target,
+	pattern pattern.Pattern,
 	from, to uint,
 ) (interface{}, error) {
 	uid := workerUID(target, pattern)

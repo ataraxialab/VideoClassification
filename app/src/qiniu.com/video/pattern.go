@@ -1,4 +1,4 @@
-package video
+package pattern
 
 // Pattern generate patterns
 type Pattern string

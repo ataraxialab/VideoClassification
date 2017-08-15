@@ -9,6 +9,8 @@ import (
 	"qiniu.com/video/builder"
 	"qiniu.com/video/logger"
 	"qiniu.com/video/mq"
+	"qiniu.com/video/pattern"
+	"qiniu.com/video/target"
 )
 
 type mockWorker int
@@ -58,15 +60,15 @@ func (b *mockBuilder) Clean(interface{}) error {
 }
 
 const (
-	impl    = builder.Implement("mockImpl")
-	target  = builder.Target("mockTarget")
-	pattern = builder.Pattern("mockPattern")
+	impl  = builder.Implement("mockImpl")
+	targt = target.Target("mockTarget")
+	pat   = pattern.Pattern("mockPattern")
 )
 
 func init() {
 	b := mockBuilder(0)
-	builder.Register(impl, target, pattern, &b)
-	mq.Register(target, pattern, mockCodec{})
+	builder.Register(impl, targt, pat, &b)
+	mq.Register(targt, pat, mockCodec{})
 }
 
 func TestServer(t *testing.T) {
@@ -78,28 +80,28 @@ func TestServer(t *testing.T) {
 			mq:           &mockMQ{},
 		},
 	}
-	err := server.StartBuilding(target, pattern, nil)
+	err := server.StartBuilding(targt, pat, nil)
 	assert.Nil(t, err)
-	worker := server.workers[workerUID(target, pattern)]
+	worker := server.workers[workerUID(targt, pat)]
 	if worker == nil {
 		t.Fatal("nil worker")
 	}
 	assert.Equal(t, 1, int(*(worker.(*mockWorker))))
-	err = server.StartBuilding(target, pattern, nil)
+	err = server.StartBuilding(targt, pat, nil)
 	assert.NotNil(t, err)
 
-	err = server.StopBuilding(target, pattern)
+	err = server.StopBuilding(targt, pat)
 	assert.Nil(t, err)
 
-	err = server.StopBuilding(target, pattern)
+	err = server.StopBuilding(targt, pat)
 	assert.NotNil(t, err)
 
-	err = server.StartBuilding(target, pattern, nil)
+	err = server.StartBuilding(targt, pat, nil)
 	assert.Nil(t, err)
-	err = server.StopBuilding(target, pattern)
+	err = server.StopBuilding(targt, pat)
 	assert.Nil(t, err)
 
-	err = server.StartBuilding(target, pattern, nil)
+	err = server.StartBuilding(targt, pat, nil)
 	assert.Nil(t, err)
 	server.Close()
 	assert.Equal(t, 0, len(server.workers))
@@ -171,13 +173,13 @@ func TestGetResult(t *testing.T) {
 	var _ Server = srv
 	assert.Nil(t, err)
 
-	_, err = srv.GetResult(target, pattern, 0, 1)
+	_, err = srv.GetResult(targt, pat, 0, 1)
 	assert.NotNil(t, err)
 
-	err = srv.StartBuilding(target, pattern, nil)
+	err = srv.StartBuilding(targt, pat, nil)
 	assert.Nil(t, err)
 
-	ret, err := srv.GetResult(target, pattern, 0, 1)
+	ret, err := srv.GetResult(targt, pat, 0, 1)
 	slice, ok := ret.([]interface{})
 	assert.True(t, ok)
 	assert.Equal(t, slice[0], "test")

@@ -1,31 +1,36 @@
 package builder
 
-var builders = make(map[Implement]map[Target]map[Pattern]Builder)
+import (
+	"qiniu.com/video/pattern"
+	"qiniu.com/video/target"
+)
+
+var builders = make(map[Implement]map[target.Target]map[pattern.Pattern]Builder)
 
 // Register register builder
 func Register(impl Implement,
-	target Target,
-	pattern Pattern,
+	t target.Target,
+	p pattern.Pattern,
 	builder Builder,
 ) {
 	tBuilders := builders[impl]
 	if tBuilders == nil {
-		tBuilders = make(map[Target]map[Pattern]Builder)
+		tBuilders = make(map[target.Target]map[pattern.Pattern]Builder)
 		builders[impl] = tBuilders
 	}
 
-	pBuilders := tBuilders[target]
+	pBuilders := tBuilders[t]
 	if pBuilders == nil {
-		pBuilders = make(map[Pattern]Builder)
-		tBuilders[target] = pBuilders
+		pBuilders = make(map[pattern.Pattern]Builder)
+		tBuilders[t] = pBuilders
 	}
-	pBuilders[pattern] = builder
+	pBuilders[p] = builder
 }
 
 // GetBuilder return the data builder
 func GetBuilder(impl Implement,
-	target Target,
-	pattern Pattern,
+	target target.Target,
+	pattern pattern.Pattern,
 ) Builder {
 	tBuilders := builders[impl]
 	if tBuilders == nil {

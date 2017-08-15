@@ -11,7 +11,9 @@ import (
 
 	"qiniu.com/video/builder"
 	"qiniu.com/video/logger"
+	"qiniu.com/video/pattern"
 	"qiniu.com/video/server"
+	"qiniu.com/video/target"
 
 	"github.com/julienschmidt/httprouter"
 )
@@ -78,7 +80,7 @@ func (s *httpServer) switchOp(w http.ResponseWriter,
 	ps httprouter.Params,
 ) (interface{}, *httpError) {
 	pTarget := ps.ByName("target")
-	target := builder.GetTarget(pTarget)
+	target := target.GetTarget(pTarget)
 	if !target.IsValid() {
 		text := fmt.Sprintf("unknow target:%s", pTarget)
 		s.logger.Errorf(text)
@@ -97,7 +99,7 @@ func (s *httpServer) switchOp(w http.ResponseWriter,
 		}
 	}
 
-	pattern := builder.GetPattern(params.Pattern)
+	pattern := pattern.GetPattern(params.Pattern)
 	if !pattern.IsValid() {
 		text := "unknown pattern:" + params.Pattern
 		s.logger.Errorf(text)
@@ -161,7 +163,7 @@ func (s *httpServer) getBuildResult(w http.ResponseWriter,
 	ps httprouter.Params,
 ) (interface{}, *httpError) {
 	pTarget := ps.ByName("target")
-	target := builder.GetTarget(pTarget)
+	target := target.GetTarget(pTarget)
 	if !target.IsValid() {
 		text := fmt.Sprintf("unknow target:%s", pTarget)
 		s.logger.Errorf(text)
@@ -172,7 +174,7 @@ func (s *httpServer) getBuildResult(w http.ResponseWriter,
 	}
 
 	p := ps.ByName("pattern")
-	pattern := builder.GetPattern(p)
+	pattern := pattern.GetPattern(p)
 	if !pattern.IsValid() {
 		text := fmt.Sprintf("unknow pattern:%s", p)
 		s.logger.Errorf(text)
