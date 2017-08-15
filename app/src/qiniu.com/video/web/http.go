@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"net"
 	"net/http"
 	"strconv"
 
@@ -264,4 +265,56 @@ func parseJSONParam(body io.Reader, v interface{}) error {
 	}
 
 	return nil
+}
+
+// HTTPServer http server
+type HTTPServer struct {
+	httpListener net.Listener
+	httpServer   *httpServer
+}
+
+// NewHTTPServer create http server
+func NewHTTPServer(ctx context.Context, port int, server server.Server) (
+	*HTTPServer, error) {
+	httpListener, err := net.Listen("tcp", fmt.Sprintf("0.0.0.0:%d", port))
+	if err != nil {
+		return nil, err
+	}
+
+	srv := &HTTPServer{
+		httpListener: httpListener,
+		httpServer:   newHTTPHandler(ctx, server),
+	}
+
+	return srv, nil
+}
+
+// Serve http service
+func (s *HTTPServer) Serve() {
+	go func() {
+		logger := s.httpServer.logger
+		logger.Infof("start http server on:%s", s.httpListener.Addr().String())
+
+		server := http.Server{
+			Handler: s.httpServer,
+		}
+
+		err := server.Serve(s.httpListener)
+		if err != nil {
+			logger.Errorf("server error:%v", err)
+		}
+	}()
+}
+
+// Close close http server
+func (s *HTTPServer) Close() {
+	logger := s.httpServer.logger
+	err := s.httpListener.Close()
+	if err != nil {
+		logger.Errorf("close http server error:%v", err)
+	}
+	err = s.httpServer.server.Close()
+	if err != nil {
+		logger.Errorf("close server error:%v", err)
+	}
 }

@@ -15,6 +15,12 @@
 			"revisionTime": "2017-07-11T18:34:51Z"
 		},
 		{
+			"checksumSHA1": "WsvX9236D5dfwifhcDkGuYUHA8E=",
+			"path": "github.com/judwhite/go-svc/svc",
+			"revision": "52e9762f4dcd5373a8ecdefd85ed089cac66afa4",
+			"revisionTime": "2017-02-05T09:16:34Z"
+		},
+		{
 			"checksumSHA1": "gKyBj05YkfuLFruAyPZ4KV9nFp8=",
 			"path": "github.com/julienschmidt/httprouter",
 			"revision": "975b5c4c7c21c0e3d2764200bf2aa8e34657ae6e",
@@ -61,6 +67,10 @@
 			"path": "golang.org/x/sys/unix",
 			"revision": "e42485b6e20ae7d2304ec72e535b103ed350cc02",
 			"revisionTime": "2017-08-09T17:40:02Z"
+		},
+		{
+			"path": "golang.org/x/sys/windows/svc",
+			"revision": ""
 		}
 	],
 	"rootPath": "qiniu.com"
