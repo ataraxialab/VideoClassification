@@ -7,6 +7,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"strconv"
 
 	"qiniu.com/video/builder"
 	"qiniu.com/video/logger"
@@ -56,6 +57,8 @@ func newHTTPServer(ctx context.Context, server server.Server) *httpServer {
 	s.logger.SetPrefix("[http] ")
 
 	router.POST("/:target", doDecorate(s.switchOp, s.jsonDecorator))
+	router.GET("/:target/:pattern/:from/:count",
+		doDecorate(s.getBuildResult, s.jsonDecorator))
 	return s
 }
 
@@ -77,16 +80,16 @@ func (s *httpServer) switchOp(w http.ResponseWriter,
 	pTarget := ps.ByName("target")
 	target := builder.GetTarget(pTarget)
 	if !target.IsValid() {
-		s.logger.Errorf("unknow target:%s", pTarget)
+		text := fmt.Sprintf("unknow target:%s", pTarget)
+		s.logger.Errorf(text)
 		return nil, &httpError{
 			Code: http.StatusBadRequest,
-			Text: fmt.Sprintf("unknow target:%s", pTarget),
+			Text: text,
 		}
 	}
 
 	params := switchParam{}
-	err := parseJSONParam(req.Body, &params)
-	if err != nil {
+	if err := parseJSONParam(req.Body, &params); err != nil {
 		s.logger.Errorf("parse request body error:%v", err)
 		return nil, &httpError{
 			Code: http.StatusBadRequest,
@@ -96,24 +99,26 @@ func (s *httpServer) switchOp(w http.ResponseWriter,
 
 	pattern := builder.GetPattern(params.Pattern)
 	if !pattern.IsValid() {
-		s.logger.Errorf("unknow pattern:%s", params.Pattern)
+		text := "unknown pattern:" + params.Pattern
+		s.logger.Errorf(text)
 		return nil, &httpError{
 			Code: http.StatusBadRequest,
-			Text: "unknown pattern:" + params.Pattern,
+			Text: text,
 		}
 	}
 
 	start, stop := "start", "stop"
 	if params.Op != start && params.Op != stop {
-		s.logger.Errorf("unknow op:%s", params.Op)
+		text := "unknown op:" + params.Op
+		s.logger.Errorf(text)
 		return nil, &httpError{
 			Code: http.StatusBadRequest,
-			Text: "unknown op:" + params.Op,
+			Text: text,
 		}
 	}
 
 	if params.Op == stop {
-		if err = s.server.StopBuilding(target, pattern); err != nil {
+		if err := s.server.StopBuilding(target, pattern); err != nil {
 			s.logger.Errorf("stop build error:%v", err)
 			return nil, &httpError{
 				Code: http.StatusForbidden,
@@ -140,7 +145,7 @@ func (s *httpServer) switchOp(w http.ResponseWriter,
 		}
 	}
 
-	if err = s.server.StartBuilding(target, pattern, params.Params); err != nil {
+	if err := s.server.StartBuilding(target, pattern, params.Params); err != nil {
 		s.logger.Errorf("start build error:%v", err)
 		return nil, &httpError{
 			Code: http.StatusForbidden,
@@ -149,6 +154,66 @@ func (s *httpServer) switchOp(w http.ResponseWriter,
 	}
 
 	return nil, nil
+}
+
+func (s *httpServer) getBuildResult(w http.ResponseWriter,
+	req *http.Request,
+	ps httprouter.Params,
+) (interface{}, *httpError) {
+	pTarget := ps.ByName("target")
+	target := builder.GetTarget(pTarget)
+	if !target.IsValid() {
+		text := fmt.Sprintf("unknow target:%s", pTarget)
+		s.logger.Errorf(text)
+		return nil, &httpError{
+			Code: http.StatusBadRequest,
+			Text: text,
+		}
+	}
+
+	p := ps.ByName("pattern")
+	pattern := builder.GetPattern(p)
+	if !pattern.IsValid() {
+		text := fmt.Sprintf("unknow pattern:%s", p)
+		s.logger.Errorf(text)
+		return nil, &httpError{
+			Code: http.StatusBadRequest,
+			Text: text,
+		}
+	}
+
+	p = ps.ByName("from")
+	from, err := strconv.Atoi(p)
+	if err != nil || from < 0 {
+		text := fmt.Sprintf("bad from:%s", p)
+		s.logger.Errorf(text)
+		return nil, &httpError{
+			Code: http.StatusBadRequest,
+			Text: text,
+		}
+	}
+
+	p = ps.ByName("count")
+	count, err := strconv.Atoi(p)
+	if err != nil || count <= 0 {
+		text := fmt.Sprintf("bad count:%s", p)
+		s.logger.Errorf(text)
+		return nil, &httpError{
+			Code: http.StatusBadRequest,
+			Text: text,
+		}
+	}
+
+	result, err := s.server.GetResult(target, pattern, uint(from), uint(count))
+	if err != nil {
+		s.logger.Errorf("get result error:%v", err)
+		return nil, &httpError{
+			Code: http.StatusForbidden,
+			Text: err.Error(),
+		}
+	}
+
+	return result, nil
 }
 
 func (s *httpServer) jsonDecorator(handler apiHandler) apiHandler {
