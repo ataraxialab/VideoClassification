@@ -113,7 +113,7 @@ func (s *httpServer) switchOp(w http.ResponseWriter,
 	}
 
 	if params.Op == stop {
-		if err = s.server.StopBuild(target, pattern); err != nil {
+		if err = s.server.StopBuilding(target, pattern); err != nil {
 			s.logger.Errorf("stop build error:%v", err)
 			return nil, &httpError{
 				Code: http.StatusForbidden,
@@ -140,7 +140,7 @@ func (s *httpServer) switchOp(w http.ResponseWriter,
 		}
 	}
 
-	if err = s.server.StartBuild(target, pattern, params.Params); err != nil {
+	if err = s.server.StartBuilding(target, pattern, params.Params); err != nil {
 		s.logger.Errorf("start build error:%v", err)
 		return nil, &httpError{
 			Code: http.StatusForbidden,

@@ -62,28 +62,28 @@ func TestServer(t *testing.T) {
 			createWorker: createWorker,
 		},
 	}
-	err := server.StartBuild(target, pattern, nil)
+	err := server.StartBuilding(target, pattern, nil)
 	assert.Nil(t, err)
 	worker := server.workers[workerUID(target, pattern)]
 	if worker == nil {
 		t.Fatal("nil worker")
 	}
 	assert.Equal(t, 1, int(*(worker.(*mockWorker))))
-	err = server.StartBuild(target, pattern, nil)
+	err = server.StartBuilding(target, pattern, nil)
 	assert.NotNil(t, err)
 
-	err = server.StopBuild(target, pattern)
+	err = server.StopBuilding(target, pattern)
 	assert.Nil(t, err)
 
-	err = server.StopBuild(target, pattern)
+	err = server.StopBuilding(target, pattern)
 	assert.NotNil(t, err)
 
-	err = server.StartBuild(target, pattern, nil)
+	err = server.StartBuilding(target, pattern, nil)
 	assert.Nil(t, err)
-	err = server.StopBuild(target, pattern)
+	err = server.StopBuilding(target, pattern)
 	assert.Nil(t, err)
 
-	err = server.StartBuild(target, pattern, nil)
+	err = server.StartBuilding(target, pattern, nil)
 	assert.Nil(t, err)
 	server.Close()
 	assert.Equal(t, 0, len(server.workers))

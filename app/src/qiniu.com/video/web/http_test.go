@@ -15,13 +15,16 @@ import (
 
 type mockServer int
 
-func (s *mockServer) StartBuild(target builder.Target, pattern builder.Pattern, params interface{}) error {
+func (s *mockServer) StartBuilding(target builder.Target, pattern builder.Pattern, params interface{}) error {
 	*s++
 	return nil
 }
-func (s *mockServer) StopBuild(target builder.Target, pattern builder.Pattern) error {
+func (s *mockServer) StopBuilding(target builder.Target, pattern builder.Pattern) error {
 	*s--
 	return nil
+}
+func (s *mockServer) GetResult(target builder.Target, pattern builder.Pattern, from, to uint) (interface{}, error) {
+	return nil, nil
 }
 
 func (s *mockServer) Close() error {

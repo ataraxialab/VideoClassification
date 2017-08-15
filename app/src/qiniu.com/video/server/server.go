@@ -10,8 +10,9 @@ import (
 
 // Server interface
 type Server interface {
-	StartBuild(target builder.Target, pattern builder.Pattern, params interface{}) error
-	StopBuild(target builder.Target, pattern builder.Pattern) error
+	StartBuilding(target builder.Target, pattern builder.Pattern, params interface{}) error
+	StopBuilding(target builder.Target, pattern builder.Pattern) error
+	GetResult(target builder.Target, pattern builder.Pattern, from, to uint) (interface{}, error)
 	Close() error
 }
 
@@ -28,8 +29,8 @@ func workerUID(target builder.Target, pattern builder.Pattern) string {
 	return string(target) + "_" + string(pattern)
 }
 
-// StartBuild the building
-func (s *serverImpl) StartBuild(target builder.Target,
+// StartBuilding the building
+func (s *serverImpl) StartBuilding(target builder.Target,
 	pattern builder.Pattern,
 	params interface{},
 ) error {
@@ -60,8 +61,8 @@ func (s *serverImpl) StartBuild(target builder.Target,
 	return nil
 }
 
-// StopBuild the building
-func (s *serverImpl) StopBuild(target builder.Target,
+// StopBuilding the building
+func (s *serverImpl) StopBuilding(target builder.Target,
 	pattern builder.Pattern,
 ) error {
 	logger.Debugf("start build %s:%s", target, pattern)
@@ -74,6 +75,14 @@ func (s *serverImpl) StopBuild(target builder.Target,
 	worker.stop()
 	delete(s.workers, uid)
 	return nil
+}
+
+// GetResult returns the building result
+func (s *serverImpl) GetResult(target builder.Target,
+	pattern builder.Pattern,
+	from, to uint,
+) (interface{}, error) {
+	return nil, nil
 }
 
 // Close workers
