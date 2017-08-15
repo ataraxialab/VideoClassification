@@ -70,5 +70,7 @@ func TestEmbedded(t *testing.T) {
 		rawMsgs, err := mq.Get(topic, 1, 8, codec)
 		assert.Nil(t, err)
 		assert.Equal(t, 0, len(rawMsgs))
+		err = mq.DeleteTopic(topic)
+		assert.NotNil(t, err)
 	})
 }
