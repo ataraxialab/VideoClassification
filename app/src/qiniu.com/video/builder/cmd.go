@@ -24,6 +24,6 @@ func (f flowRandom) Build(video string,
 }
 
 func init() {
-	Register(Cmd, Frame, PatternRandom, frameRandom{})
-	Register(Cmd, Flow, PatternRandom, flowRandom{})
+	Register(Cmd, targetFrame, patternRandom, frameRandom{})
+	Register(Cmd, targetFlow, patternRandom, flowRandom{})
 }
