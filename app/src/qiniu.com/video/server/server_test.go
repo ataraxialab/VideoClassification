@@ -75,6 +75,9 @@ func TestServer(t *testing.T) {
 	err = server.StopBuild(target, pattern)
 	assert.Nil(t, err)
 
+	err = server.StopBuild(target, pattern)
+	assert.NotNil(t, err)
+
 	err = server.StartBuild(target, pattern, nil)
 	assert.Nil(t, err)
 	err = server.StopBuild(target, pattern)
