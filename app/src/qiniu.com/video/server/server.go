@@ -2,6 +2,7 @@ package server
 
 import (
 	"fmt"
+	"os"
 
 	"qiniu.com/video/builder"
 	"qiniu.com/video/logger"
@@ -134,7 +135,7 @@ func CreateServer(impl builder.Implement, q mq.MQ) (Server, error) {
 		impl:    impl,
 		mq:      q,
 		workers: make(map[string]worker),
-		logger:  logger.Std,
+		logger:  logger.New(os.Stderr, "[server] ", logger.Ldefault),
 	}
 	srv.logger.Level = logger.Ldebug
 
