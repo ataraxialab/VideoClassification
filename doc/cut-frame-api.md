@@ -79,11 +79,11 @@ POST /:target                    // target = frame(截帧) | flow(光流)
 Content-Type: application/json
 
 {
-  "pattern": "random|sample",    // random: 随机截取一段，sample: 时间范围，然后在时间范围内随机
+  "pattern": "random",           // random: 从视频的某个时间开始随机截取多帧
   "op": "start|stop",            // start: 开始截帧生产数据, stop: 结束截帧
   "params": {                    // op = start 有效
-    "duration": 100,             // 截帧的时长
-    "interval": 100              // 播放时间间隔，sample时需要
+    "count": 100,                // 帧数量
+    "offset": 0.1,               // 开始截帧的偏移量，范围：0-1
   }
 }
 ```
@@ -122,7 +122,7 @@ Content-Type: application/json
 ```
 GET /:target/:pattern/:from/:count
 // target = frame(截帧) | flow(光流)
-// pattern = random|sample
+// pattern = random
 // from >= 0
 // count >= 0
 ```

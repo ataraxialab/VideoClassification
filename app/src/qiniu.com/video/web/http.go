@@ -129,8 +129,8 @@ func (s *httpServer) switchOp(w http.ResponseWriter,
 		return nil, nil
 	}
 
-	if params.Params.Duration <= 0 {
-		text := fmt.Sprintf("invalid duration:%d", params.Params.Duration)
+	if params.Params.Count <= 0 {
+		text := fmt.Sprintf("invalid count:%d", params.Params.Count)
 		s.logger.Errorf(text)
 		return nil, &httpError{
 			Code: http.StatusBadRequest,
@@ -138,10 +138,10 @@ func (s *httpServer) switchOp(w http.ResponseWriter,
 		}
 	}
 
-	if pattern.NeedInterval() && params.Params.Interval <= 0 {
+	if params.Params.Offset <= 0 {
 		return nil, &httpError{
 			Code: http.StatusBadRequest,
-			Text: fmt.Sprintf("invalid interval:%d", params.Params.Interval),
+			Text: fmt.Sprintf("invalid offset:%f", params.Params.Offset),
 		}
 	}
 

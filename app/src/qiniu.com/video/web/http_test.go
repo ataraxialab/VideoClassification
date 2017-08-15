@@ -67,8 +67,6 @@ func TestSwitch(t *testing.T) {
 		"pattern":"abc",
 		"op":"start",
 		"params":{
-			"interval":0,
-			"duration":1
 		}}`)
 	assert.Nil(t, err)
 	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
@@ -78,8 +76,6 @@ func TestSwitch(t *testing.T) {
 		"pattern":"random",
 		"op":"++start",
 		"params":{
-			"interval":0,
-			"duration":1
 		}}`)
 	assert.Nil(t, err)
 	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
@@ -89,19 +85,29 @@ func TestSwitch(t *testing.T) {
 		"pattern":"random",
 		"op":"start",
 		"params":{
-			"interval":0,
-			"duration":0
+			"count":0
 		}}`)
 	assert.Nil(t, err)
 	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
-	assert.Contains(t, readAll(resp), "duration")
+	assert.Contains(t, readAll(resp), "count")
 
 	resp, err = post(ts.URL+"/frame", `{
 		"pattern":"random",
 		"op":"start",
 		"params":{
-			"interval":0,
-			"duration":1
+			"count":1,
+			"offset":-1
+		}}`)
+	assert.Nil(t, err)
+	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
+	assert.Contains(t, readAll(resp), "offset")
+
+	resp, err = post(ts.URL+"/frame", `{
+		"pattern":"random",
+		"op":"start",
+		"params":{
+			"count":1,
+			"offset":0.1
 		}}`)
 	assert.Nil(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
@@ -114,28 +120,6 @@ func TestSwitch(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 	assert.Equal(t, 0, int(srv))
-
-	resp, err = post(ts.URL+"/frame", `{
-		"pattern":"sample",
-		"op":"start",
-		"params":{
-			"interval":0,
-			"duration":1
-		}}`)
-	assert.Nil(t, err)
-	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
-	assert.Contains(t, readAll(resp), "interval")
-
-	resp, err = post(ts.URL+"/frame", `{
-		"pattern":"sample",
-		"op":"start",
-		"params":{
-			"interval":1,
-			"duration":1
-		}}`)
-	assert.Nil(t, err)
-	assert.Equal(t, http.StatusOK, resp.StatusCode)
-	assert.Equal(t, 1, int(srv))
 }
 
 func TestGetResult(t *testing.T) {

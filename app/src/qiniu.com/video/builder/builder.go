@@ -44,9 +44,6 @@ type Pattern string
 const (
 	// PatternRandom cut one frame from the video randomly
 	patternRandom Pattern = "random"
-	// PatternSample sample small video by interval, then doing random in the
-	// small video
-	patternSample Pattern = "sample"
 	// PatternUnknown unknow target
 	patternUnknown Pattern = "unknown"
 )
@@ -56,8 +53,6 @@ func GetPattern(p string) Pattern {
 	switch p {
 	case string(patternRandom):
 		return patternRandom
-	case string(patternSample):
-		return patternSample
 	default:
 		return patternUnknown
 	}
@@ -65,16 +60,11 @@ func GetPattern(p string) Pattern {
 
 // IsValid checks pattern
 func (p *Pattern) IsValid() bool {
-	return *p == patternRandom || *p == patternSample
-}
-
-// NeedInterval checks needness of interval under current the pattern
-func (p *Pattern) NeedInterval() bool {
-	return *p == patternSample
+	return *p == patternRandom
 }
 
 // Params building parameters, it is BAD design
 type Params struct {
-	Duration int `json:"duration"`
-	Interval int `json:"interval"`
+	Count  int     `json:"count"`
+	Offset float32 `json:"offset"`
 }
