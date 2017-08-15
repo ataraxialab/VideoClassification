@@ -2,10 +2,12 @@ package server
 
 import (
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 
 	"qiniu.com/video/builder"
+	"qiniu.com/video/logger"
 	"qiniu.com/video/mq"
 )
 
@@ -17,6 +19,12 @@ func (mw *mockWorker) start() {
 
 func (mw *mockWorker) stop() {
 	*mw--
+}
+
+func (mw *mockWorker) pause() {
+}
+
+func (mw *mockWorker) proceed() {
 }
 
 type mockServer struct {
@@ -37,9 +45,10 @@ func (mockCodec) Decode([]byte) interface{} {
 	return nil
 }
 
-type mockBuilder struct{}
+type mockBuilder int
 
-func (mockBuilder) Build(string, interface{}) ([]interface{}, error) {
+func (b *mockBuilder) Build(string, interface{}) ([]interface{}, error) {
+	*b++
 	return nil, nil
 }
 
@@ -50,7 +59,8 @@ const (
 )
 
 func init() {
-	builder.Register(impl, target, pattern, mockBuilder{})
+	b := mockBuilder(0)
+	builder.Register(impl, target, pattern, &b)
 	mq.Register(target, pattern, mockCodec{})
 }
 
@@ -152,4 +162,34 @@ func TestGetResult(t *testing.T) {
 	assert.Equal(t, slice[0], "test")
 
 	srv.Close()
+}
+
+func TestWorker(t *testing.T) {
+	builder := mockBuilder(0)
+	w := &workerImpl{
+		uid:         "test-worker",
+		mq:          mockMQ{},
+		codec:       mockCodec{},
+		dataBuilder: &builder,
+		logger:      logger.Std,
+	}
+
+	w.start()
+	time.Sleep(100 * time.Millisecond)
+	assert.True(t, builder > 0)
+	assert.Equal(t, w.status, Start)
+	w.pause()
+	cnt := builder
+	time.Sleep(100 * time.Millisecond)
+	assert.True(t, cnt == builder || cnt+1 == builder)
+	assert.Equal(t, w.status, Pause)
+	w.proceed()
+	time.Sleep(1000 * time.Millisecond)
+	assert.True(t, builder > cnt+1)
+	assert.Equal(t, w.status, Start)
+	w.stop()
+	cnt = builder
+	time.Sleep(1000 * time.Millisecond)
+	assert.True(t, cnt == builder || cnt+1 == builder)
+	assert.Equal(t, w.status, Stop)
 }
