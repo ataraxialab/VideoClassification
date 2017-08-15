@@ -44,7 +44,7 @@ type httpServer struct {
 	server server.Server
 }
 
-func newHTTPServer(ctx context.Context, server server.Server) *httpServer {
+func newHTTPHandler(ctx context.Context, server server.Server) *httpServer {
 	router := httprouter.New()
 
 	router.PanicHandler = panicHandler

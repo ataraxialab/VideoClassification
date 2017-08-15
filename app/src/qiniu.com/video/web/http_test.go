@@ -49,7 +49,7 @@ func get(url string) (*http.Response, error) {
 
 func TestSwitch(t *testing.T) {
 	srv := mockServer(0)
-	s := newHTTPServer(context.TODO(), &srv)
+	s := newHTTPHandler(context.TODO(), &srv)
 
 	ts := httptest.NewServer(s)
 	defer ts.Close()
@@ -125,7 +125,7 @@ func TestSwitch(t *testing.T) {
 
 func TestGetResult(t *testing.T) {
 	srv := mockServer(0)
-	s := newHTTPServer(context.TODO(), &srv)
+	s := newHTTPHandler(context.TODO(), &srv)
 
 	ts := httptest.NewServer(s)
 	defer ts.Close()
