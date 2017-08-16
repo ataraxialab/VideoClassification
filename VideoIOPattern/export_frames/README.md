@@ -5,11 +5,11 @@
 #run build.sh to build the bin for Cal Flow and Frame
 #use the export_frames as following:
 
-./export_frames -i Media_URL -o OutputDir -s WidthxHeight -c frame_count -interval check_time_interval -postfix picfmt -log logoutputflag
+./export_frames -i Media_URL -o OutputDir -ss fSeekPercent -s WidthxHeight -c frame_count -interval check_time_interval -postfix picfmt -log logoutputflag
 
 Ex:
 
-./export_frames -i test.mp4 -o ./pics -s 256x256 -c 21 -interval 10 -postfix jpg -log 1
+./export_frames -i test.mp4 -ss 0.1 -o ./pics -s 256x256 -c 21 -interval 10 -postfix jpg -log 1
 
 
 ===
@@ -26,3 +26,7 @@ decoder_worker.cpp 用于接收解码工作序列然后顺序执行解码请求
   * 读取解码序列文件
   * 按照序列依次调用DoFrameExport函数解码对应N帧图像
   * 将解码的图像写到对应内存位置/Redis/落盘
+
+* 2017.08.13 改动
+修改 export_frames  -ss 参数含义，由原来的整数改为浮点数， 含义为视频的中的的位置，0表示开始位置，1表示结束位置，0.5 表示中间位置
+增加interval 的含义，支持interval 值为0，interval 的默认值为0， 表示按要求在指定位置产生相应的帧和光流
