@@ -14,14 +14,22 @@ import (
 	"qiniu.com/video/target"
 )
 
-type mockWorker int
+type mockWorker struct {
+	counter int
+	uid     string
+}
+
+var status = &statusImpl{}
 
 func (mw *mockWorker) start() {
-	*mw++
+	mw.counter++
+	go func() {
+		status.addCount(1)
+	}()
 }
 
 func (mw *mockWorker) stop() {
-	*mw--
+	mw.counter--
 }
 
 func (mw *mockWorker) pause() {
@@ -30,13 +38,19 @@ func (mw *mockWorker) pause() {
 func (mw *mockWorker) proceed() {
 }
 
-type mockServer struct {
-	*serverImpl
+func (mw *mockWorker) name() string {
+	return mw.uid
 }
 
-func createWorker(string, interface{}, builder.Builder, mq.Codec) worker {
-	w := mockWorker(0)
-	return &w
+func (mw *mockWorker) status() workerStatus {
+	return status
+}
+
+func createWorker(name string, p interface{}, b builder.Builder,
+	q mq.Codec) worker {
+	w := &mockWorker{}
+	w.uid = name
+	return w
 }
 
 type mockCodec struct{}
@@ -52,7 +66,7 @@ type mockBuilder int
 
 func (b *mockBuilder) Build(interface{}) ([]interface{}, error) {
 	*b++
-	return nil, nil
+	return make([]interface{}, 100000), nil
 }
 
 func (b *mockBuilder) Clean(interface{}) error {
@@ -72,15 +86,15 @@ func init() {
 	mq.Register(targt, pat, mockCodec{})
 }
 
-func TestServer(t *testing.T) {
-	server := &mockServer{
-		serverImpl: &serverImpl{
-			impl:         impl,
-			workers:      make(map[string]worker),
-			createWorker: createWorker,
-			mq:           &mockMQ{},
-			locker:       new(sync.Mutex),
-		},
+func TestStopStart(t *testing.T) {
+	server := &serverImpl{
+		impl:           impl,
+		workers:        make(map[string]worker),
+		consumedCounts: make(map[string]uint64),
+		createWorker:   createWorker,
+		mq:             &mockMQ{},
+		logger:         logger.Std,
+		locker:         new(sync.Mutex),
 	}
 	err := server.StartBuilding(targt, pat, nil)
 	assert.Nil(t, err)
@@ -88,7 +102,7 @@ func TestServer(t *testing.T) {
 	if worker == nil {
 		t.Fatal("nil worker")
 	}
-	assert.Equal(t, 1, int(*(worker.(*mockWorker))))
+	assert.Equal(t, 1, (worker.(*mockWorker).counter))
 	err = server.StartBuilding(targt, pat, nil)
 	assert.NotNil(t, err)
 
@@ -202,21 +216,38 @@ func TestWorker(t *testing.T) {
 	w.start()
 	time.Sleep(100 * time.Millisecond)
 	assert.True(t, builder > 0)
-	assert.Equal(t, w.status, Start)
+	assert.Equal(t, w.stat.status(), Start)
+
+	w.start()
+	assert.Equal(t, w.stat.status(), Start)
+
+	w.proceed()
+	assert.Equal(t, w.stat.status(), Start)
+
 	w.pause()
 	cnt := builder
 	time.Sleep(100 * time.Millisecond)
 	assert.True(t, cnt == builder || cnt+1 == builder)
-	assert.Equal(t, w.status, Pause)
+	assert.Equal(t, w.stat.status(), Pause)
+
+	w.start()
+	assert.Equal(t, w.stat.status(), Pause)
+
 	w.proceed()
 	time.Sleep(1000 * time.Millisecond)
 	assert.True(t, builder > cnt+1)
-	assert.Equal(t, w.status, Start)
+	assert.Equal(t, w.stat.status(), Start)
+
 	w.stop()
 	cnt = builder
 	time.Sleep(1000 * time.Millisecond)
 	assert.True(t, cnt == builder || cnt+1 == builder)
-	assert.Equal(t, w.status, Stop)
+	assert.Equal(t, w.stat.status(), Stop)
+
+	w.start()
+	assert.Equal(t, w.stat.status(), Stop)
+	w.proceed()
+	assert.Equal(t, w.stat.status(), Stop)
 }
 
 func TestClean(t *testing.T) {
@@ -244,4 +275,53 @@ func TestClean(t *testing.T) {
 	w.clean(uint(0), uint(3), int64(50*time.Millisecond))
 	assert.Equal(t, 2, int(builder))
 	assert.Equal(t, 2, q.deleteCount)
+}
+
+func TestMonitor(t *testing.T) {
+	server := &serverImpl{
+		impl:           impl,
+		workers:        make(map[string]worker),
+		consumedCounts: make(map[string]uint64),
+		mq:             &mockMQ{},
+		locker:         new(sync.Mutex),
+		maxRetainCount: 100,
+		monitorPeriod:  10 * time.Millisecond,
+		logger:         logger.Std,
+	}
+	server.createWorker = func(uid string, params interface{},
+		dataBuilder builder.Builder, codec mq.Codec) worker {
+		return &workerImpl{
+			uid:         uid,
+			mq:          server.mq,
+			codec:       codec,
+			params:      params,
+			dataBuilder: dataBuilder,
+			logger:      server.logger,
+		}
+	}
+	go server.monitor()
+	var _ Server = server
+
+	err := server.StartBuilding(targt, pat, nil)
+	assert.Nil(t, err)
+	uid := workerUID(targt, pat)
+	worker := server.workers[uid]
+	if worker == nil {
+		t.Fatal("nil worker")
+	}
+	time.Sleep(500 * time.Millisecond)
+	s := worker.status()
+	t.Logf("build count:%d, consume:%d", s.buildCount(), server.consumedCounts[uid])
+	assert.Equal(t, Pause, s.status())
+	for s.status() != Start {
+		server.GetResult(targt, pat, 0, 100)
+	}
+	assert.Equal(t, Start, s.status())
+	t.Logf("build count:%d, consume:%d", s.buildCount(), server.consumedCounts[uid])
+	time.Sleep(500 * time.Millisecond)
+	t.Logf("build count:%d, consume:%d", s.buildCount(), server.consumedCounts[uid])
+	assert.Equal(t, Pause, s.status())
+	t.Logf("build count:%d, consume:%d", s.buildCount(), server.consumedCounts[uid])
+
+	server.Close()
 }
