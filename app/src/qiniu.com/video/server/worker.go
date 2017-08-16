@@ -74,14 +74,10 @@ func (w *workerImpl) stop() {
 	logger.Infof("stop:%s", w.uid)
 	w.status = Stop
 }
+
 func (w *workerImpl) proceed() {
 	w.status = Start
 	w.goon <- 0
-}
-
-func (w *workerImpl) selectVideo() string {
-	// TODO
-	return ""
 }
 
 func (w *workerImpl) clean(from, count uint, expireTime int64) {
