@@ -1,6 +1,7 @@
 package server
 
 import (
+	"sync"
 	"testing"
 	"time"
 
@@ -78,6 +79,7 @@ func TestServer(t *testing.T) {
 			workers:      make(map[string]worker),
 			createWorker: createWorker,
 			mq:           &mockMQ{},
+			locker:       new(sync.Mutex),
 		},
 	}
 	err := server.StartBuilding(targt, pat, nil)

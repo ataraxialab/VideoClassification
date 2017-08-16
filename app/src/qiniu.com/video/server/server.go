@@ -3,6 +3,7 @@ package server
 import (
 	"fmt"
 	"os"
+	"sync"
 
 	"qiniu.com/video/builder"
 	"qiniu.com/video/logger"
@@ -25,6 +26,7 @@ type serverImpl struct {
 	workers      map[string]worker
 	createWorker func(string, interface{}, builder.Builder, mq.Codec) worker
 	logger       *logger.Logger
+	locker       sync.Locker
 }
 
 // worker unique id
@@ -42,13 +44,6 @@ func (s *serverImpl) StartBuilding(target target.Target,
 		return fmt.Errorf("no codec of target:%s,pattern:%s", target, pattern)
 	}
 
-	uid := workerUID(target, pattern)
-	if s.workers[uid] != nil {
-		return fmt.Errorf("worker of target:%s, pattern:%s exits",
-			target,
-			pattern)
-	}
-
 	logger.Debugf("start build %s:%s", target, pattern)
 	dataBuilder := builder.GetBuilder(s.impl, target, pattern)
 	if dataBuilder == nil {
@@ -58,10 +53,20 @@ func (s *serverImpl) StartBuilding(target target.Target,
 			target,
 			pattern)
 	}
-	// make sure queue is clean
-	s.mq.DeleteTopic(uid)
+
+	uid := workerUID(target, pattern)
+	s.locker.Lock()
+	if s.workers[uid] != nil {
+		s.locker.Unlock()
+		return fmt.Errorf("worker of target:%s, pattern:%s exits",
+			target,
+			pattern)
+	}
 	worker := s.createWorker(uid, params, dataBuilder, codec)
 	s.workers[uid] = worker
+	s.locker.Unlock()
+	// make sure queue is clean
+	s.mq.DeleteTopic(uid)
 	worker.start()
 	return nil
 }
@@ -72,13 +77,16 @@ func (s *serverImpl) StopBuilding(target target.Target,
 ) error {
 	logger.Debugf("start build %s:%s", target, pattern)
 	uid := workerUID(target, pattern)
+	s.locker.Lock()
 	worker := s.workers[uid]
 	if worker == nil {
+		s.locker.Unlock()
 		return fmt.Errorf("no worker exists of target:%s, pattern:%s",
 			target, pattern)
 	}
-	worker.stop()
 	delete(s.workers, uid)
+	s.locker.Unlock()
+	worker.stop()
 	return nil
 }
 
@@ -136,6 +144,7 @@ func CreateServer(impl builder.Implement, q mq.MQ) (Server, error) {
 		mq:      q,
 		workers: make(map[string]worker),
 		logger:  logger.New(os.Stderr, "[server] ", logger.Ldefault),
+		locker:  new(sync.Mutex),
 	}
 	srv.logger.Level = logger.Ldebug
 
