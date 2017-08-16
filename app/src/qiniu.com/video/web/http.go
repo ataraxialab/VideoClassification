@@ -12,6 +12,7 @@ import (
 
 	"qiniu.com/video/builder"
 	"qiniu.com/video/logger"
+	"qiniu.com/video/mq"
 	"qiniu.com/video/pattern"
 	"qiniu.com/video/server"
 	"qiniu.com/video/target"
@@ -271,11 +272,22 @@ func parseJSONParam(body io.Reader, v interface{}) error {
 type HTTPServer struct {
 	httpListener net.Listener
 	httpServer   *httpServer
+	mq           mq.MQ
 }
 
 // NewHTTPServer create http server
-func NewHTTPServer(ctx context.Context, port int, server server.Server) (
-	*HTTPServer, error) {
+func NewHTTPServer(ctx context.Context, port int) (*HTTPServer, error) {
+	mq := &mq.EmbeddedMQ{}
+	if err := mq.Open(); err != nil {
+		return nil, err
+	}
+
+	server, err := server.CreateServer(builder.Cmd, mq)
+	if err != nil {
+		mq.Close()
+		return nil, err
+	}
+
 	httpListener, err := net.Listen("tcp", fmt.Sprintf("0.0.0.0:%d", port))
 	if err != nil {
 		return nil, err
@@ -284,6 +296,7 @@ func NewHTTPServer(ctx context.Context, port int, server server.Server) (
 	srv := &HTTPServer{
 		httpListener: httpListener,
 		httpServer:   newHTTPHandler(ctx, server),
+		mq:           mq,
 	}
 
 	return srv, nil
@@ -309,12 +322,20 @@ func (s *HTTPServer) Serve() {
 // Close close http server
 func (s *HTTPServer) Close() {
 	logger := s.httpServer.logger
+
 	err := s.httpListener.Close()
 	if err != nil {
 		logger.Errorf("close http server error:%v", err)
 	}
+
 	err = s.httpServer.server.Close()
 	if err != nil {
 		logger.Errorf("close server error:%v", err)
 	}
+
+	err = s.mq.Close()
+	if err != nil {
+		logger.Errorf("close mq error:%v", err)
+	}
+	logger.Infof("http server closed")
 }
