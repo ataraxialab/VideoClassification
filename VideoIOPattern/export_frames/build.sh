@@ -1,3 +1,5 @@
+apt-get update
+apt-get install yasm
 tar -xvf ffmpeg-3.3.2.tar.gz
 cd ffmpeg-3.3.2
 cd ffmpeg-3.3.2
