@@ -18,9 +18,8 @@ import (
 
 const (
 	// Cmd call external command to build data
-	Cmd        Implement = "cmd"
-	outputRoot string    = "build-output"
-	program    string    = "./export_frames"
+	Cmd     Implement = "cmd"
+	program string    = "./export_frames"
 )
 
 type cmdRandom struct {

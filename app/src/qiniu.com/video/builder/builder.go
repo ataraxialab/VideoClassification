@@ -14,3 +14,10 @@ type Params struct {
 	Count  int     `json:"count"`
 	Offset float32 `json:"offset"`
 }
+
+var outputRoot = "build-output"
+
+// SetOutputRoot set build output directory
+func SetOutputRoot(d string) {
+	outputRoot = d
+}

@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"math"
 	"net"
 	"net/http"
 	"strconv"
@@ -209,8 +208,10 @@ func (s *httpServer) getBuildResult(w http.ResponseWriter,
 		}
 	}
 
-	result, err := s.server.GetResult(target, pattern, uint(from),
-		uint(math.Min(1000, count)))
+	if count > 1000 {
+		count = 1000
+	}
+	result, err := s.server.GetResult(target, pattern, uint(from), uint(count))
 	if err != nil {
 		s.logger.Errorf("get result error:%v", err)
 		return nil, &httpError{

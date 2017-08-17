@@ -2,8 +2,9 @@ package config
 
 // Builder building related configurations
 type Builder struct {
-	MaxRetainMessageCount int `json:"max_retain_message_count"`
-	CheckPeriod           int `json:"check_period"`
+	MaxRetainMessageCount int    `json:"max_retain_message_count"`
+	CheckPeriod           int    `json:"check_period"`
+	OutputRoot            string `json:"output_root"`
 }
 
 // MQ mq related configurations
