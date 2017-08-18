@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"qiniu.com/video/builder"
+	"qiniu.com/video/config"
 	"qiniu.com/video/logger"
 	"qiniu.com/video/mq"
 	"qiniu.com/video/pattern"
@@ -74,6 +75,11 @@ func (b *mockBuilder) Clean(interface{}) error {
 	return nil
 }
 
+func (b *mockBuilder) Init() error {
+	*b++
+	return nil
+}
+
 const (
 	impl  = builder.Implement("mockImpl")
 	targt = target.Target("mockTarget")
@@ -127,7 +133,7 @@ type mockMQ struct {
 	deleteCount int
 }
 
-func (q *mockMQ) Open() error {
+func (q *mockMQ) Open(*config.MQ) error {
 	return nil
 }
 
@@ -173,11 +179,11 @@ func (q mockMQ) DeleteTopic(topic string) error {
 }
 
 func TestCreateServer(t *testing.T) {
-	_, err := CreateServer(builder.Implement(""), nil)
+	_, err := CreateServer(builder.Implement(""), nil, &config.Builder{})
 	assert.NotNil(t, err)
-	_, err = CreateServer(impl, nil)
+	_, err = CreateServer(impl, nil, &config.Builder{})
 	assert.NotNil(t, err)
-	srv, err := CreateServer(impl, &mockMQ{})
+	srv, err := CreateServer(impl, &mockMQ{}, &config.Builder{})
 	assert.Nil(t, err)
 	assert.NotNil(t, srv)
 
@@ -185,7 +191,7 @@ func TestCreateServer(t *testing.T) {
 }
 
 func TestGetResult(t *testing.T) {
-	srv, err := CreateServer(impl, &mockMQ{})
+	srv, err := CreateServer(impl, &mockMQ{}, &config.Builder{})
 	var _ Server = srv
 	assert.Nil(t, err)
 
@@ -285,7 +291,7 @@ func TestMonitor(t *testing.T) {
 		mq:             &mockMQ{},
 		locker:         new(sync.Mutex),
 		maxRetainCount: 100,
-		monitorPeriod:  10 * time.Millisecond,
+		checkPeriod:    10 * time.Millisecond,
 		logger:         logger.Std,
 	}
 	server.createWorker = func(uid string, params interface{},

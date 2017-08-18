@@ -2,6 +2,10 @@ package main
 
 import (
 	"context"
+	"encoding/json"
+	"errors"
+	"flag"
+	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
@@ -13,9 +17,27 @@ import (
 
 type program struct {
 	httpServer *web.HTTPServer
+	conf       conf
 }
 
 func (p *program) Init(env svc.Environment) error {
+	var configFile string
+	flag.StringVar(&configFile, "conf", "", "configure")
+	flag.Parse()
+	if configFile == "" {
+		return errors.New("no configure file")
+	}
+
+	data, err := ioutil.ReadFile(configFile)
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(data, &p.conf)
+	if err != nil {
+		return err
+	}
+
 	if env.IsWindowsService() {
 		dir := filepath.Dir(os.Args[0])
 		return os.Chdir(dir)
@@ -24,7 +46,9 @@ func (p *program) Init(env svc.Environment) error {
 }
 
 func (p *program) Start() error {
-	httpServer, err := web.NewHTTPServer(context.Background(), 8000)
+	httpServer, err := web.NewHTTPServer(context.Background(),
+		p.conf.Port,
+		p.conf.Config)
 	if err != nil {
 		return err
 	}

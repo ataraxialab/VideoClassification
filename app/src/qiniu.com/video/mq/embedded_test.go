@@ -4,6 +4,8 @@ import (
 	"os"
 	"testing"
 
+	"qiniu.com/video/config"
+
 	"github.com/stretchr/testify/assert"
 )
 
@@ -21,10 +23,12 @@ func TestEmbedded(t *testing.T) {
 	mq := &EmbeddedMQ{}
 	var _ MQ = mq
 
-	mq.Open()
+	mq.Open(&config.MQ{
+		URI: "./embeddeddb",
+	})
 	defer func() {
 		mq.Close()
-		os.Remove(dataPath)
+		os.Remove("./embeddeddb")
 	}()
 
 	topic := "topic"

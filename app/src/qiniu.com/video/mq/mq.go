@@ -1,6 +1,10 @@
 package mq
 
-import "encoding/binary"
+import (
+	"encoding/binary"
+
+	"qiniu.com/video/config"
+)
 
 const (
 	// StatusPending waiting to consume
@@ -13,7 +17,7 @@ const (
 
 // MQ provides the persistent operation
 type MQ interface {
-	Open() error
+	Open(*config.MQ) error
 	Close() error
 	Put(topic string, encoder Encoder, val ...interface{}) error
 	Get(topic string, from, count uint, decoder Decoder) ([]MessageEx, error)

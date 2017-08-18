@@ -11,6 +11,7 @@ import (
 	"strconv"
 
 	"qiniu.com/video/builder"
+	"qiniu.com/video/config"
 	"qiniu.com/video/logger"
 	"qiniu.com/video/mq"
 	"qiniu.com/video/pattern"
@@ -279,13 +280,14 @@ type HTTPServer struct {
 }
 
 // NewHTTPServer create http server
-func NewHTTPServer(ctx context.Context, port int) (*HTTPServer, error) {
+func NewHTTPServer(ctx context.Context, port int, conf config.Config) (
+	*HTTPServer, error) {
 	mq := &mq.EmbeddedMQ{}
-	if err := mq.Open(); err != nil {
+	if err := mq.Open(&conf.MQ); err != nil {
 		return nil, err
 	}
 
-	server, err := server.CreateServer(builder.Cmd, mq)
+	server, err := server.CreateServer(builder.Cmd, mq, &conf.Builder)
 	if err != nil {
 		mq.Close()
 		return nil, err

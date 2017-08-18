@@ -4,6 +4,8 @@ import (
 	"encoding/binary"
 	"time"
 
+	"qiniu.com/video/config"
+
 	"github.com/boltdb/bolt"
 )
 
@@ -18,8 +20,8 @@ type EmbeddedMQ struct {
 }
 
 // Open mq
-func (mq *EmbeddedMQ) Open() error {
-	db, err := bolt.Open(dataPath, 0600, nil)
+func (mq *EmbeddedMQ) Open(conf *config.MQ) error {
+	db, err := bolt.Open(conf.URI, 0600, nil)
 	if err != nil {
 		return err
 	}

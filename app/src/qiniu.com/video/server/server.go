@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"qiniu.com/video/builder"
+	"qiniu.com/video/config"
 	"qiniu.com/video/logger"
 	"qiniu.com/video/mq"
 	"qiniu.com/video/pattern"
@@ -31,7 +32,7 @@ type serverImpl struct {
 	locker         sync.Locker
 	isClosed       bool
 	maxRetainCount uint64
-	monitorPeriod  time.Duration
+	checkPeriod    time.Duration
 }
 
 // worker unique id
@@ -57,6 +58,12 @@ func (s *serverImpl) StartBuilding(target target.Target,
 			s.impl,
 			target,
 			pattern)
+	}
+
+	err := dataBuilder.Init()
+	if err != nil {
+		s.logger.Errorf("data builder initialize error:%v,%s", err, err.Error())
+		return err
 	}
 
 	uid := workerUID(target, pattern)
@@ -160,7 +167,7 @@ func (s *serverImpl) Close() error {
 func (s *serverImpl) monitor() {
 	for !s.isClosed {
 		select {
-		case <-time.After(s.monitorPeriod):
+		case <-time.After(s.checkPeriod):
 		}
 
 		s.locker.Lock()
@@ -187,10 +194,15 @@ func (s *serverImpl) monitor() {
 }
 
 // CreateServer create build server
-func CreateServer(impl builder.Implement, q mq.MQ) (Server, error) {
+func CreateServer(impl builder.Implement, q mq.MQ, conf *config.Builder) (Server, error) {
 	if !builder.HasImplement(impl) {
 		return nil, fmt.Errorf("no implementation of %s", impl)
 	}
+
+	builder.SetVideoRoot(conf.VideoRoot)
+	builder.SetOutputRoot(conf.OutputRoot)
+	builder.SetValLabelFile(conf.ValLabelFile)
+	builder.SetTrainLabelFile(conf.TrainLabelFile)
 
 	if q == nil {
 		return nil, fmt.Errorf("nil mq")
@@ -204,8 +216,8 @@ func CreateServer(impl builder.Implement, q mq.MQ) (Server, error) {
 		logger:         logger.New(os.Stderr, "[server] ", logger.Ldefault),
 		locker:         new(sync.Mutex),
 		isClosed:       false,
-		maxRetainCount: uint64(1000000),
-		monitorPeriod:  time.Second * 3,
+		maxRetainCount: uint64(conf.MaxRetainMessageCount),
+		checkPeriod:    time.Duration(conf.CheckPeriod) * time.Second,
 	}
 	srv.logger.Level = logger.Ldebug
 
