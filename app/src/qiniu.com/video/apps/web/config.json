@@ -1,0 +1,15 @@
+{
+    "builder":{
+        "max_retain_message_count": 100000,
+        "check_period": 10,
+        "output_root": "output-root",
+        "video_root": "video-root",
+        "train_label": "resource/train.txt",
+        "val_label": "resource/val.txt"
+    },
+    "mq": {
+        "uri": "data/mq",
+        "name": "cmd"
+    },
+    "port": 8000
+}

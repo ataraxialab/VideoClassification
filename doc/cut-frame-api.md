@@ -7,25 +7,12 @@
   - [截帧方式](#%E6%88%AA%E5%B8%A7%E6%96%B9%E5%BC%8F)
   - [光流计算方式](#%E5%85%89%E6%B5%81%E8%AE%A1%E7%AE%97%E6%96%B9%E5%BC%8F)
   - [API](#api)
-    - [请求截帧](#%E8%AF%B7%E6%B1%82%E6%88%AA%E5%B8%A7)
+    - [截帧/计算光流](#%E6%88%AA%E5%B8%A7%E8%AE%A1%E7%AE%97%E5%85%89%E6%B5%81)
       - [请求](#%E8%AF%B7%E6%B1%82)
       - [返回](#%E8%BF%94%E5%9B%9E)
-    - [请求计算光流](#%E8%AF%B7%E6%B1%82%E8%AE%A1%E7%AE%97%E5%85%89%E6%B5%81)
+    - [获取截帧/光流结果](#%E8%8E%B7%E5%8F%96%E6%88%AA%E5%B8%A7%E5%85%89%E6%B5%81%E7%BB%93%E6%9E%9C)
       - [请求](#%E8%AF%B7%E6%B1%82-1)
       - [返回](#%E8%BF%94%E5%9B%9E-1)
-      - [获取截帧结果](#%E8%8E%B7%E5%8F%96%E6%88%AA%E5%B8%A7%E7%BB%93%E6%9E%9C)
-      - [请求](#%E8%AF%B7%E6%B1%82-2)
-      - [返回](#%E8%BF%94%E5%9B%9E-2)
-    - [获取光流结果](#%E8%8E%B7%E5%8F%96%E5%85%89%E6%B5%81%E7%BB%93%E6%9E%9C)
-      - [请求](#%E8%AF%B7%E6%B1%82-3)
-      - [返回](#%E8%BF%94%E5%9B%9E-3)
-    - [截帧数据使用结束](#%E6%88%AA%E5%B8%A7%E6%95%B0%E6%8D%AE%E4%BD%BF%E7%94%A8%E7%BB%93%E6%9D%9F)
-      - [请求](#%E8%AF%B7%E6%B1%82-4)
-      - [返回](#%E8%BF%94%E5%9B%9E-4)
-    - [光流数据使用结束](#%E5%85%89%E6%B5%81%E6%95%B0%E6%8D%AE%E4%BD%BF%E7%94%A8%E7%BB%93%E6%9D%9F)
-      - [请求](#%E8%AF%B7%E6%B1%82-5)
-      - [返回](#%E8%BF%94%E5%9B%9E-5)
-    - [其他（查询历史，删除数据==，但是非核心可以放后面做）](#%E5%85%B6%E4%BB%96%E6%9F%A5%E8%AF%A2%E5%8E%86%E5%8F%B2%E5%88%A0%E9%99%A4%E6%95%B0%E6%8D%AE%E4%BD%86%E6%98%AF%E9%9D%9E%E6%A0%B8%E5%BF%83%E5%8F%AF%E4%BB%A5%E6%94%BE%E5%90%8E%E9%9D%A2%E5%81%9A)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -55,8 +42,7 @@
 
 ## 截帧方式
 
-TODO
-三种基本的截帧方式:
+四种基本的截帧方式:
 
 1. 选择一个视频随机的截取一段连续的原始图像
 2. 选择一个视频随机截取一段连续的光流图像
@@ -69,24 +55,29 @@ TODO
 
 ## 光流计算方式
 
-TODO
+参考 **截帧方式**
 
 
 
 ## API
 
-### 请求截帧
+### 截帧/计算光流
 
-根据截帧模式对视频进行截帧，并保存结果。
+根据截帧模式对视频进行截帧&计算光流，并保存结果。
 
 #### 请求
 
 ```
-POST /frame
+POST /:target                    // target = frame(截帧) | flow(光流)
 Content-Type: application/json
 
 {
-  "pattern": "random" // TODO 有哪些模式
+  "pattern": "random",           // random: 从视频的某个时间开始随机截取多帧
+  "op": "start|stop",            // start: 开始截帧生产数据, stop: 结束截帧
+  "params": {                    // op = start 有效
+    "count": 100,                // 帧数量
+    "offset": 0.1,               // 开始截帧的偏移量，范围：0-1
+  }
 }
 ```
 
@@ -96,8 +87,13 @@ Content-Type: application/json
 // 成功
 200
 
-// 请求参数非法
-400
+// 非法请求
+4xx
+
+Content-Type: application/json
+{
+  "message": "error message"
+}
 
 // 服务器错误
 5xx
@@ -110,55 +106,18 @@ Content-Type: application/json
 
 
 
-### 请求计算光流
+### 获取截帧/光流结果
 
-根据截帧模式对视频进行计算光流，并保存结果。
-
-#### 请求
-
-```
-POST /flow
-Content-Type: application/json
-
-{
-  "pattern": "random" // TODO 有哪些模式
-}
-```
-
-#### 返回
-
-```
-// 成功
-200
-
-// 请求参数非法
-400
-
-// 服务器错误
-5xx
-
-Content-Type: application/json
-{
-  "message": "error message"
-}
-```
-
-
-
-#### 获取截帧结果
-
-根据截帧模式，获取截帧数据。
+根据模式，获取截帧/光流数据。
 
 #### 请求
 
 ```
-GET /frame
-Content-Type: application/json
-
-{
-  "pattern": "random", // TODO 有哪些模式
-  "count": 1 // 1 - 100
-}
+GET /:target/:pattern/:from/:count
+// target = frame(截帧) | flow(光流)
+// pattern = random
+// from >= 0
+// count >= 0
 ```
 
 #### 返回
@@ -168,16 +127,24 @@ Content-Type: application/json
 200
 Content-Type: application/json
 
-{
- "frames":[{
+[{
     "idx": 1000,
-    "label": 999,0,
-    "image_path": "path/of/image"
- }]
-}
+    "label": 999.0,
+    "image_path": "path/of/image0"
+  }, {
+    "idx": 1001,
+    "label": 999.0,
+    "image_path": "path/of/image1"
+  }
+]
 
-// 请求参数非法
-400
+// 非法请求
+4xx
+
+Content-Type: application/json
+{
+  "message": "error message"
+}
 
 // 服务器错误
 5xx
@@ -187,113 +154,3 @@ Content-Type: application/json
   "message": "error message"
 }
 ```
-
-
-
-### 获取光流结果
-
-根据计算光流算法，获取光流数据。
-
-#### 请求
-
-```
-GET /flow
-Content-Type: application/json
-
-{
-  "pattern": "random", // TODO 有哪些模式
-  "count": 1 // 1 - 100
-}
-```
-
-#### 返回
-
-```
-// 成功
-200
-Content-Type: application/json
-
-{
-	// TODO 返回什么数据？
-}
-
-// 请求参数非法
-400
-
-// 服务器错误
-5xx
-
-Content-Type: application/json
-{
-  "message": "error message"
-}
-```
-
-
-
-### 截帧数据使用结束
-
-为了删除生成的截帧数据
-
-#### 请求
-
-```
-DELETE /frame
-Content-Type: application/json
-
-{
-  "id": ["frame1", "frame2"] // 截帧id，在获取接口中返回
-}
-```
-
-#### 返回
-
-```
-// 成功
-200
-
-// 服务器错误
-5xx
-
-Content-Type: application/json
-{
-  "message": "error message"
-}
-```
-
-
-
-### 光流数据使用结束
-
-为了删除生成的光流数据
-
-#### 请求
-
-```
-DELETE /flow
-Content-Type: application/json
-
-{
-  "id": ["flow1", "flow2"] // 光流id，在获取接口中返回
-}
-```
-
-#### 返回
-
-```
-// 成功
-200
-
-// 服务器错误
-5xx
-
-Content-Type: application/json
-{
-  "message": "error message"
-}
-```
-
-
-
-### 其他（查询历史，删除数据==，但是非核心可以放后面做）
-
