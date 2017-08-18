@@ -2,6 +2,8 @@ package mq
 
 import (
 	"encoding/binary"
+	"os"
+	"path"
 	"time"
 
 	"qiniu.com/video/config"
@@ -19,9 +21,18 @@ type EmbeddedMQ struct {
 	endian binary.ByteOrder
 }
 
+func sureDirExits(p string) {
+	d := path.Dir(p)
+	if d != "." {
+		os.MkdirAll(d, os.ModePerm)
+	}
+}
+
 // Open mq
 func (mq *EmbeddedMQ) Open(conf *config.MQ) error {
-	db, err := bolt.Open(conf.URI, 0600, nil)
+	p := conf.URI
+	sureDirExits(p)
+	db, err := bolt.Open(p, 0600, nil)
 	if err != nil {
 		return err
 	}

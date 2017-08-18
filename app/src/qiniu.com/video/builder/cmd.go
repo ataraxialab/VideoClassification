@@ -3,6 +3,7 @@ package builder
 import (
 	"bytes"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"math/rand"
 	"os"
@@ -80,7 +81,7 @@ func (f *cmdRandom) Build(params interface{}) ([]interface{}, error) {
 	arg := fmt.Sprintf("-i %s -o %s -postfix jpg -c %d -ss %f -s 256x256",
 		video, output, p.Count, p.Offset)
 
-	f.logger.Errorf("run cmd:%s %s", program, arg)
+	f.logger.Infof("run cmd:%s %s", program, arg)
 	cmd := exec.Command(program, strings.Split(arg, " ")...)
 	out, e := cmd.CombinedOutput()
 	f.logger.Infof("output:%s, error:%v", out, e)
@@ -91,7 +92,11 @@ func (f *cmdRandom) Build(params interface{}) ([]interface{}, error) {
 		return nil, e
 	}
 
-	return f.buildLabels(f.getFiles(output), label), nil
+	ret := f.buildLabels(f.getFiles(output), label)
+	if len(ret) == 0 {
+		os.RemoveAll(output)
+	}
+	return ret, nil
 }
 
 func (f *cmdRandom) buildLabels(files []string, label int) []interface{} {
@@ -136,13 +141,40 @@ func (f *cmdRandom) getFiles(d string) []string {
 	return files
 }
 
+func (f *cmdRandom) deleteEmptyDir(p string) {
+	f.logger.Infof("delete empty dir:%s", p)
+	d, e := os.Open(p)
+	if e != nil {
+		f.logger.Errorf("open dir error:%v:%s", e, e.Error())
+		return
+	}
+
+	_, e = d.Readdirnames(1)
+	if e == io.EOF {
+		e = os.RemoveAll(p)
+		f.logger.Infof("delete file:%s, result:%s", p, e)
+		return
+	}
+	f.logger.Infof("%s has children, not delete", p)
+}
+
+func (f *cmdRandom) remove(p string) error {
+	err := os.Remove(p)
+	if err != nil {
+		f.logger.Errorf("remove file error:%s", err.Error())
+		return err
+	}
+	f.deleteEmptyDir(path.Dir(p))
+	return nil
+}
+
 func (f *cmdRandom) Clean(result interface{}) error {
 	if r, ok := result.(frame.Frame); ok {
-		return os.Remove(r.ImagePath)
+		return f.remove(r.ImagePath)
 	}
 
 	if r, ok := result.(flow.Flow); ok {
-		return os.Remove(r.ImagePath)
+		return f.remove(r.ImagePath)
 	}
 	return nil
 }

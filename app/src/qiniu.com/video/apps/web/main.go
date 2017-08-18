@@ -12,12 +12,16 @@ import (
 	"syscall"
 
 	"github.com/judwhite/go-svc/svc"
+	"qiniu.com/video/config"
 	"qiniu.com/video/web"
 )
 
 type program struct {
 	httpServer *web.HTTPServer
-	conf       conf
+	conf       struct {
+		config.Config
+		Port int `json:"port"`
+	}
 }
 
 func (p *program) Init(env svc.Environment) error {

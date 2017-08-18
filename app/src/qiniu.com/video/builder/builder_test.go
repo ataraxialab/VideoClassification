@@ -58,7 +58,7 @@ func TestLoadLabel(t *testing.T) {
 
 func TestBuilder(t *testing.T) {
 	videoRoot = "."
-	trainLabelFile = newFile(t, "trainLabelFile", "p,2\ntrainLabelFile,1\ncmd,123\n\nfactory,111")
+	trainLabelFile = newFile(t, "trainLabelFile", "program,2\ntrainLabelFile,1\ncmd,123\n\nfactory,111")
 	valLabelFile = newFile(t, "valLabelFile", "valLabelFile,2\nbuilder,123\nbulder_test,1")
 	program = newFile(t, "./program", "#!/bin/env bash\nmkdir -p $4 && touch $4/frame && touch $4/flow")
 	os.Chmod(program, os.ModePerm)
@@ -92,4 +92,18 @@ func TestBuilder(t *testing.T) {
 	assert.Equal(t, 1, len(ret))
 	_, ok = ret[0].(flow.Flow)
 	assert.True(t, ok)
+}
+
+func TestDeleteEmptyDir(t *testing.T) {
+	os.Mkdir("abc", os.ModePerm)
+
+	_, e := os.Open("abc")
+	assert.Nil(t, e)
+
+	cmd := &cmdRandom{
+		logger: logger.Std,
+	}
+	cmd.deleteEmptyDir("abc")
+	_, e = os.Open("abc")
+	assert.True(t, os.IsNotExist(e))
 }
