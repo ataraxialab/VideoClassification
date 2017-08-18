@@ -183,6 +183,8 @@ int  CalOptFlow(S_Frames_Output**  ppsFrameOutput, int iFrameOutputCount, char* 
 	int             iFlowDataSize = 0;
 	S_Frames_Output*   psFrameOutput = NULL;
 	char  strDir[1024] = { 0 };
+	char*     pFind = NULL;
+	char*     pFileName = NULL;
 
 	do
 	{
@@ -198,6 +200,16 @@ int  CalOptFlow(S_Frames_Output**  ppsFrameOutput, int iFrameOutputCount, char* 
 			{
 				strDir[strlen(strDir)] = '/';
 			}
+		}
+
+		pFind = strrchr(pURL, '/');
+		if(pFind == NULL)
+		{
+			pFileName = pURL;
+		}
+		else
+		{
+			pFileName = pFind+1;
 		}
 
 		for (iLoop = 0; iLoop < iFrameOutputCount; iLoop++)
@@ -216,7 +228,7 @@ int  CalOptFlow(S_Frames_Output**  ppsFrameOutput, int iFrameOutputCount, char* 
 				memset(strTmp, 0, 1024);
 				if (iIndex == 1)
 				{
-					sprintf(strTmp, "%s%s_frame_%04d_%04d.%s", strDir, pURL, iLoop, iIndex - 1, pPostFix);
+					sprintf(strTmp, "%s%s_frame_%04d_%04d.%s", strDir, pFileName, iLoop, iIndex - 1, pPostFix);
 					cv::imwrite(strTmp, matPre);
 				}
 
@@ -224,10 +236,10 @@ int  CalOptFlow(S_Frames_Output**  ppsFrameOutput, int iFrameOutputCount, char* 
 				cvtColor(matCur, grey_cur, CV_BGR2GRAY);
 
 				memset(strTmp, 0, 1024);
-				sprintf(strTmp, "%s%s_frame_%04d_%04d.%s", strDir, pURL, iLoop, iIndex, pPostFix);
+				sprintf(strTmp, "%s%s_frame_%04d_%04d.%s", strDir, pFileName, iLoop, iIndex, pPostFix);
 				cv::imwrite(strTmp, matCur);
 
-				sprintf(strTmp, "%s%s_flow_%04d_%04d_%04d.%s", strDir, pURL, iLoop, iIndex - 1, iIndex, pPostFix);
+				sprintf(strTmp, "%s%s_flow_%04d_%04d_%04d.%s", strDir, pFileName, iLoop, iIndex - 1, iIndex, pPostFix);
 				cflows(grey_prev, grey_cur, pFlowData, iFlowDataSize, strTmp, iLogFlag);
 				AddOptFlow(psFrameOutput, pFlowData, iFlowDataSize, iIndex - 1);
 			}
