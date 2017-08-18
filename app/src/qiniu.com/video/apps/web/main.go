@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"flag"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
@@ -41,6 +42,8 @@ func (p *program) Init(env svc.Environment) error {
 	if err != nil {
 		return err
 	}
+
+	fmt.Printf("configure:%s", data)
 
 	if env.IsWindowsService() {
 		dir := filepath.Dir(os.Args[0])
