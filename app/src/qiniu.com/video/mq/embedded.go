@@ -146,3 +146,7 @@ func (mq *EmbeddedMQ) messageID(id uint64) []byte {
 	mq.endian.PutUint64(bytes, id)
 	return bytes
 }
+
+func init() {
+	register("embed", &EmbeddedMQ{})
+}
