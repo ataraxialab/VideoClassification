@@ -60,7 +60,7 @@ func TestBuilder(t *testing.T) {
 	videoRoot = "."
 	trainLabelFile = newFile(t, "trainLabelFile", "program,2\ntrainLabelFile,1\ncmd,123\n\nfactory,111")
 	valLabelFile = newFile(t, "valLabelFile", "valLabelFile,2\nbuilder,123\nbulder_test,1")
-	program = newFile(t, "./program", "#!/bin/env bash\nmkdir -p $4 && touch $4/frame && touch $4/flow")
+	program = newFile(t, "./program", "#!/bin/bash\nmkdir -p $4 && touch $4/frame && touch $4/flow")
 	os.Chmod(program, os.ModePerm)
 	defer func() {
 		os.Remove(trainLabelFile)
